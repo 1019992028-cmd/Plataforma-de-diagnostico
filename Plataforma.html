@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Espacio de Apoyo Emocional</title>
+    <style>
+        :root {
+            --bg-color: #f2f7f5;
+            --card-bg: #ffffff;
+            --primary-green: #e2ede8;
+            --primary-green-light: #f0f7f3;
+            --accent-green: #4a7c59;
+            --accent-green-hover: #3b6347;
+            --text-main: #2d3732;
+            --text-muted: #5e6f66;
+            --border-color: #d8e2dc;
+            --user-msg: #4a7c59;
+            --bot-msg: #e8f2ed;
+            --shadow-soft: 0 8px 24px rgba(74, 124, 89, 0.08);
+            --shadow-float: 0 12px 32px rgba(45, 55, 50, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 16px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ----- MENÚ DE INICIO / WELCOME OVERLAY ----- */
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(242, 247, 245, 0.96);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 16px;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .welcome-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .welcome-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 32px 24px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: var(--shadow-float);
+            animation: fadeIn 0.4s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .welcome-icon {
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary-green);
+            color: var(--accent-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px auto;
+            font-size: 24px;
+        }
+
+        .welcome-card h2 {
+            color: var(--accent-green);
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .welcome-card .team-name {
+            font-weight: 700;
+            color: var(--accent-green-hover);
+        }
+
+        .welcome-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .btn-start {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(74, 124, 89, 0.3);
+            width: 100%;
+            max-width: 260px;
+        }
+
+        .btn-start:hover {
+            background-color: var(--accent-green-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-start:active {
+            transform: translateY(1px);
+        }
+
+        /* ----- TARJETA EN LA ESQUINA (SOLUCIÓN MOBILE RESPONSIVE) ----- */
+        .corner-info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-green);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-soft);
+            max-width: 280px;
+            z-index: 100;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.35;
+            transition: all 0.3s ease;
+        }
+
+        .corner-info strong {
+            color: var(--accent-green);
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.88rem;
+        }
+
+        /* Responsive ajuste para celulares */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px 8px;
+            }
+
+            .corner-info {
+                position: static;
+                width: 100%;
+                max-width: 650px;
+                margin-top: 16px;
+                margin-bottom: 12px;
+                box-sizing: border-box;
+                border-radius: 12px;
+            }
+        }
+
+        /* ----- CONTENEDOR PRINCIPAL ----- */
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-soft);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            margin: 0 auto;
+        }
+
+        .header {
+            background-color: var(--primary-green);
+            padding: 20px 24px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--accent-green);
+        }
+
+        .header p {
+            margin: 6px 0 0 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        /* Chatbot destacado en la parte superior */
+        .chatbot-box {
+            background-color: var(--primary-green-light);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .bot-avatar {
+            background-color: var(--accent-green);
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(74, 124, 89, 0.2);
+        }
+
+        .bot-message {
+            font-size: 0.92rem;
+            line-height: 1.45;
+            color: var(--text-main);
+        }
+
+        /* Formulario de Evaluación */
+        .survey-title {
+            font-size: 1rem;
+            color: var(--accent-green);
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .question-group {
+            margin-bottom: 16px;
+        }
+
+        .question-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.88rem;
+            color: var(--text-main);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background-color: #ffffff;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234A7C59%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 10px auto;
+            padding-right: 32px;
+        }
+
+        select:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.15);
+        }
+
+        /* Área de Chat Interactivo */
+        .chat-section {
+            margin-top: 24px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .chat-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .chat-section h3 {
+            margin: 0;
+            font-size: 1.05rem;
+            color: var(--accent-green);
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            background-color: var(--primary-green);
+            color: var(--accent-green);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .chat-history {
+            height: 230px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            overflow-y: auto;
+            background-color: #fafcfb;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+            animation: popIn 0.2s ease-out;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-msg.bot {
+            background-color: var(--bot-msg);
+            color: var(--text-main);
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+
+        .chat-msg.user {
+            background-color: var(--user-msg);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input-container input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            outline: none;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input-container input:focus {
+            border-color: var(--accent-green);
+        }
+
+        .btn-send {
+            background-color: var(--accent-green);
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            flex-shrink: 0;
+        }
+
+        .btn-send:hover {
+            background-color: var(--accent-green-hover);
+        }
+
+        .btn-send:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ DE INICIO / WELCOME OVERLAY -->
+    <div class="welcome-overlay" id="welcomeMenu">
+        <div class="welcome-card">
+            <div class="welcome-icon">🌱</div>
+            <h2>Bienvenid@ a tu Espacio</h2>
+            <p>Somos el <span class="team-name">Equipo de Prevención de la Depresión y Apoyo Emocional</span>.</p>
+            <p>Queremos ofrecerte un entorno tranquilo, confidencial y sin juicios para acompañarte en tus momentos de cansancio o malestar.</p>
+            <p style="font-size:0.88rem; opacity: 0.9;"><strong>Te invitamos a usar este programa con total confianza y seguridad.</strong></p>
+            <button class="btn-start" onclick="iniciarSistema()">Comenzar ahora</button>
+        </div>
+    </div>
+
+    <!-- TARJETA EN LA ESQUINA (ADAPTATIVA Y RESPONSIVE) -->
+    <div class="corner-info" id="cornerInfo">
+        <strong>Equipo de Prevención de la Depresión</strong>
+        Bienvenid@. Recuerda usar este programa con total confianza y tranquilidad cuando lo necesites.
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DE LA APLICACIÓN -->
+    <div class="container">
+        <div class="header">
+            <h1>Espacio de Acompañamiento</h1>
+            <p>Responde con sinceridad para brindarte una escucha más empática.</p>
+        </div>
+
+        <div class="content">
+            <!-- CHATBOT EN LA PARTE SUPERIOR -->
+            <div class="chatbot-box">
+                <div class="bot-avatar">IA</div>
+                <div class="bot-message" id="chatResponse">
+                    Hola, estoy aquí para escucharte y acompañarte. Puedes responder a las preguntas de la encuesta para que adapte mi ayuda a lo que estás viviendo hoy.
+                </div>
+            </div>
+
+            <div class="survey-title">
+                <span>📋</span> Cuestionario de Estado Emocional
+            </div>
+
+            <!-- PREGUNTAS SOBRE DEPRESIÓN Y ÁNIMO -->
+            <div class="question-group">
+                <label for="animo">1. ¿Cómo describirías tu estado de ánimo habitual esta semana?</label>
+                <select id="animo" onchange="evaluarEstado()">
+                    <option value="" disabled selected>Selecciona una opción...</option>
+                    <option value="estabilizado">Tranquilo o estable</option>
+                    <option value="triste">Triste, melancólico o vacío</option>
+                    <option value="abrumado">Ansioso, abrumado o irritable</option>
+                </select>
+            </div>
+
+            <div class="question-group">
+                <label for="interes">2. ¿Sientes interés o placer al hacer actividades que antes disfrutabas?</label>
+                <select id="interes" onchange="evaluarEstado()">
+                    <option value="" disabled selected>Selecciona una opción...</option>
+                    <option value="si">Sí, sigo disfrutándolas igual</option>
+                    <option value="poco">Mucho menos que antes</option>
+                    <option value="nada">Casi nada o me cuesta encontrarle sentido</option>
+                </select>
+            </div>
+
+            <div class="question-group">
+                <label for="energia">3. ¿Cómo han estado tus niveles de energía o fatiga física?</label>
+                <select id="energia" onchange="evaluarEstado()">
+                    <option value="" disabled selected>Selecciona una opción...</option>
+                    <option value="normal">Normal, con energía para el día a día</option>
+                    <option value="cansado">Cansancio constante, aun habiendo descansado</option>
+                    <option value="exhausto">Me cuesta hacer el más mínimo esfuerzo</option>
+                </select>
+            </div>
+
+            <div class="question-group">
+                <label for="sueno">4. Patrón de descanso y sueño:</label>
+                <select id="sueno" onchange="evaluarEstado()">
+                    <option value="" disabled selected>Selecciona una opción...</option>
+                    <option value="bien">Duermo bien (7-8 horas)</option>
+                    <option value="poco">Insomnio o duermo menos de 5 horas</option>
+                    <option value="mucho">Duermo demasiado y me cuesta levantarme</option>
+                </select>
+            </div>
+
+            <div class="question-group">
+                <label for="conexion">5. ¿Te has sentido desconectado/a o aislado/a de tus seres cercanos?</label>
+                <select id="conexion" onchange="evaluarEstado()">
+                    <option value="" disabled selected>Selecciona una opción...</option>
+                    <option value="no">No, me siento acompañado/a</option>
+                    <option value="algo">Un poco, prefiero estar a solas más de lo usual</option>
+                    <option value="mucho">Totalmente, me aíslo porque hablar me agota</option>
+                </select>
+            </div>
+
+            <!-- SECCIÓN DE CHAT EN TIEMPO REAL -->
+            <div class="chat-section">
+                <div class="chat-header-flex">
+                    <h3>Conversación Abierta</h3>
+                    <span class="status-badge">Asistente Activo</span>
+                </div>
+                <div class="chat-history" id="chatHistory">
+                    <div class="chat-msg bot">Hola, puedes expresarte libremente. ¿Hay algo en particular de lo que te gustaría hablar o desahogarte?</div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="userInput" placeholder="Escribe cómo te sientes..." onkeypress="handleKeyPress(event)">
+                    <button class="btn-send" onclick="enviarMensaje()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Objeto global para almacenar las respuestas seleccionadas por el usuario
+        const estadoUsuario = {
+            animo: "",
+            interes: "",
+            energia: "",
+            sueno: "",
+            conexion: ""
+        };
+
+        // Función para ocultar la bienvenida
+        function iniciarSistema() {
+            const menu = document.getElementById('welcomeMenu');
+            menu.classList.add('hidden');
+        }
+
+        // Evaluación del formulario y sincronización con el contexto del chatbot
+        function evaluarEstado() {
+            estadoUsuario.animo = document.getElementById('animo').value;
+            estadoUsuario.interes = document.getElementById('interes').value;
+            estadoUsuario.energia = document.getElementById('energia').value;
+            estadoUsuario.sueno = document.getElementById('sueno').value;
+            estadoUsuario.conexion = document.getElementById('conexion').value;
+
+            const chatResponse = document.getElementById('chatResponse');
+
+            let nivelCarga = 0;
+            if (estadoUsuario.animo === 'triste' || estadoUsuario.animo === 'abrumado') nivelCarga++;
+            if (estadoUsuario.interes === 'poco' || estadoUsuario.interes === 'nada') nivelCarga++;
+            if (estadoUsuario.energia === 'cansado' || estadoUsuario.energia === 'exhausto') nivelCarga++;
+            if (estadoUsuario.sueno === 'poco' || estadoUsuario.sueno === 'mucho') nivelCarga++;
+            if (estadoUsuario.conexion === 'algo' || estadoUsuario.conexion === 'mucho') nivelCarga++;
+
+            if (nivelCarga >= 3) {
+                chatResponse.innerHTML = "Siento que estés pasando por un momento con tanta carga emocional. He guardado tus respuestas en nuestro chat para acompañarte de forma respetuosa y sin sobrecargarte. Cuando quieras, háblame en el chat de abajo.";
+            } else if (nivelCarga >= 1) {
+                chatResponse.innerHTML = "Gracias por completar la encuesta. Veo que hay ciertos puntos de desgaste en tu rutina. He tomado nota para darte mejores respuestas cuando conversemos.";
+            } else {
+                chatResponse.innerHTML = "Parece que te mantienes con relativo equilibrio hoy. Recuerda que cuidar de ti es un proceso continuo y este espacio estará aquí siempre que lo requieras.";
+            }
+        }
+
+        // Lógica del Chat Interactivo
+        function enviarMensaje() {
+            const input = document.getElementById('userInput');
+            const texto = input.value.trim();
+            if (texto === "") return;
+
+            const chatHistory = document.getElementById('chatHistory');
+
+            // 1. Agregar mensaje del usuario
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'chat-msg user';
+            userMsgDiv.textContent = texto;
+            chatHistory.appendChild(userMsgDiv);
+
+            input.value = "";
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            // 2. Respuesta adaptativa del bot con delay natural
+            setTimeout(() => {
+                const botMsgDiv = document.createElement('div');
+                botMsgDiv.className = 'chat-msg bot';
+                botMsgDiv.textContent = generarRespuestaBotInteligente(texto);
+                chatHistory.appendChild(botMsgDiv);
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }, 550);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                enviarMensaje();
+            }
+        }
+
+        // Motor de diálogo enriquecido y contextualizado a la encuesta
+        function generarRespuestaBotInteligente(mensaje) {
+            const msg = mensaje.toLowerCase();
+
+            // Intercepción por temas específicos considerando respuestas de la encuesta
+
+            // 1. CANSANCIO / ENERGÍA
+            if (msg.includes("cansado") || msg.includes("fatiga") || msg.includes("sin fuerzas") || msg.includes("exhausto") || msg.includes("agotado")) {
+                if (estadoUsuario.energia === 'exhausto' || estadoUsuario.energia === 'cansado') {
+                    return "Noté en la encuesta que tus niveles de energía están muy bajos últimamente. Es completamente comprensible que te sientas exhausto/a. Hoy intenta no exigirte más de lo necesario y date permiso para pausar.";
+                }
+                return "El agotamiento mental a menudo se siente directamente en el cuerpo. Cuando sientas que no puedes más, intenta bajar tus tareas a lo más esencial de hoy.";
+            }
+
+            // 2. SUEÑO / INSOMNIO
+            if (msg.includes("sueño") || msg.includes("dormir") || msg.includes("insomnio") || msg.includes("despertar") || msg.includes("noche")) {
+                if (estadoUsuario.sueno === 'poco') {
+                    return "En la encuesta mencionaste que estás durmiendo muy poco. El insomnio suele agravar la tristeza y la irritabilidad. Evita pantallas antes de acostarte e intenta realizar respiraciones lentas al acostarte.";
+                } else if (estadoUsuario.sueno === 'mucho') {
+                    return "Mencionaste que estás durmiendo demasiado. A veces el cuerpo busca refugiarse en el sueño para desconectarse del malestar. Intenta dar pequeños pasos al levantarte sin juzgarte.";
+                }
+                return "Un descanso irregular afecta profundamente nuestro estado de ánimo. Si te cuesta conciliar el sueño, escribir lo que ronda por tu cabeza en un papel antes de dormir puede ayudar.";
+            }
+
+            // 3. AISLAMIENTO / SOLEDAD / CONEXIÓN
+            if (msg.includes("solo") || msg.includes("sola") || msg.includes("aislado") || msg.includes("nadie") || msg.includes("soledad") || msg.includes("desconectado")) {
+                if (estadoUsuario.conexion === 'mucho' || estadoUsuario.conexion === 'algo') {
+                    return "Recuerdo que marcaste que te sientes algo distante o aislado/a de tus cercanos. Aislarse es una reacción natural al agotamiento, pero no olvides que aquí tienes este canal para desahogarte libremente.";
+                }
+                return "Sentirse solo/a aún estando rodeado de gente es una emoción difícil. Es un alivio poder expresarlo. ¿Te gustaría contarme desde cuándo te sientes así?";
+            }
+
+            // 4. DESINTERÉS / PÉRDIDA DE PLACER (ANHEDONIA)
+            if (msg.includes("nada me gusta") || msg.includes("aburrido") || msg.includes("sin sentido") || msg.includes("ganas") || msg.includes("motiva")) {
+                if (estadoUsuario.interes === 'nada' || estadoUsuario.interes === 'poco') {
+                    return "En el cuestionario indicaste que perdiste el interés en cosas que solías disfrutar. Esto es un síntoma muy común de desánimo profundo. No te fuerces a sentir placer inmediato, empieza con acciones micro sin presión.";
+                }
+                return "La falta de motivación suele aparecer cuando nuestra mente está saturada. No necesitas tener todo resuelto hoy, enfócate solo en la siguiente hora.";
+            }
+
+            // 5. TRISTEZA / LLANTO / VACÍO
+            if (msg.includes("triste") || msg.includes("llorar") || msg.includes("vacio") || msg.includes("mal") || msg.includes("deprimid")) {
+                if (estadoUsuario.animo === 'triste') {
+                    return "Sé que estás atravesando días melancólicos como señalaste en la encuesta. Llorar o sentir vacío no es síntoma de debilidad, sino de que has estado sosteniendo demasiado.";
+                }
+                return "Está bien no estar bien. Darle espacio a lo que sientes es el primer paso para aliviarlo. Si deseas compartir más detalles, te escucho con gusto.";
+            }
+
+            // 6. ANSIEDAD / PREOCUPACIÓN / ABRUMADO
+            if (msg.includes("ansia") || msg.includes("ansied") || msg.includes("miedo") || msg.includes("preocupad") || msg.includes("abrumad") || msg.includes("estres")) {
+                return "Cuando todo parece abrumador, ayuda mucho traer la atención al presente. Toma una respiración profunda: inhala en 4 segundos, sostén 4 y exhala suavemente. Aquí estoy contigo.";
+            }
+
+            // 7. SALUDOS
+            if (msg.includes("hola") || msg.includes("buenas") || msg.includes("que tal") || msg.includes("saludos")) {
+                return "Hola. Gracias por escribir. Estoy disponible si quieres conversar o reflexionar sobre lo que respondiste en la encuesta.";
+            }
+
+            // 8. AGRADECIMIENTOS
+            if (msg.includes("gracias") || msg.includes("agradezco") || msg.includes("amable")) {
+                return "Gracias a ti por confiar en este programa. Recuerda que el equipo desarrolló este espacio pensando en tu bienestar y que puedes volver cuando lo necesites.";
+            }
+
+            // RESPUESTA GENERAL SI HAY DATOS REGISTRADOS
+            if (estadoUsuario.animo || estadoUsuario.energia) {
+                return "Te escucho atentamente. Tomando en cuenta lo que compartiste en el cuestionario, recuerda tratarte con amabilidad hoy. ¿Quieres decirme algo más sobre cómo te sientes?";
+            }
+
+            return "Entiendo. Expresar lo que llevamos dentro mediante palabras es una excelente forma de despejar la mente. Continúa si lo deseas, estoy aquí para leerte.";
+        }
+    </script>
+</body>
+</html>
