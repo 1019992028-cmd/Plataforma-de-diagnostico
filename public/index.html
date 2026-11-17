@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mente en Calma · Espacio de Acompañamiento</title>
+<style>
+:root{--bg:#eaf2ee;--card:rgba(255,255,255,.93);--pri:#3b6347;--pri-h:#2d4f37;--pri-l:#e2ede8;--txt:#2d3732;--mut:#5e6f66;--acc:#dfb15b;--acc-l:#f0f7f3;--bd:#ccdcd3;--r:16px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+body{background:linear-gradient(135deg,#e5efe9 0%,#cce0d5 100%) fixed;color:var(--txt);line-height:1.6;padding:20px;display:flex;justify-content:center;align-items:center;min-height:100vh;transition:background .4s}
+/* Partículas de fondo (motor tomado de Plataforma) */
+#bgCanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
+body.play{background:linear-gradient(135deg,#eef6f1 0%,#d2e5da 100%) fixed}
+.wrap{position:relative;z-index:1;width:100%;max-width:720px;background:var(--card);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border-radius:var(--r);box-shadow:0 12px 32px rgba(59,99,71,.12);padding:32px;border:1px solid var(--bd)}
+.view{display:none;animation:in .35s ease}.view.on{display:block}
+@media (prefers-reduced-motion:reduce){.view{animation:none}.btn,.choice,.gc{transition:none}}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h1{color:var(--pri);font-size:24px;text-align:center;margin-bottom:6px}h2{color:var(--pri);font-size:20px;margin-bottom:8px}
+.sub{color:var(--mut);font-size:14.5px;text-align:center;margin-bottom:22px}
+.icon{font-size:36px;text-align:center}
+.btn{background:var(--pri);color:#fff;border:none;padding:13px 26px;font-size:15px;font-weight:600;border-radius:25px;cursor:pointer;transition:transform .15s,opacity .2s}
+.btn:hover{opacity:.92;transform:translateY(-1px)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn.soft{background:var(--pri-l);color:var(--pri)}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.choice{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:#fff;border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:14px;padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:all .2s}
+.choice:hover{background:var(--pri-l);transform:translateY(-2px)}.choice .e{font-size:30px}.choice b{display:block;color:var(--pri)}.choice span{font-size:13.5px;color:var(--mut)}
+.choice.fun{background:var(--pri-l)}.choice.fun:hover{background:#d3e5da}
+.prog{height:8px;background:var(--pri-l);border-radius:8px;overflow:hidden;margin:6px 0 20px}.prog i{display:block;height:100%;width:0;background:var(--pri);transition:width .3s}
+.opt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:13px 16px;margin-bottom:9px;font-size:15px;cursor:pointer;color:var(--txt);transition:all .2s}
+.opt:hover,.opt.sel{background:var(--pri-l);border-color:var(--pri)}
+.meter{height:14px;background:var(--pri-l);border-radius:10px;overflow:hidden;margin:12px 0}.meter i{display:block;height:100%;background:linear-gradient(90deg,#a8cfb9,#3b6347);transition:width .6s}
+.tips li{margin:6px 0 6px 20px;color:var(--mut);font-size:14.5px}
+.note{background:var(--acc-l);border:1px solid #cfe0d6;color:var(--pri-h);padding:12px 15px;border-radius:10px;font-size:13px;margin-top:16px}
+.foot{margin-top:18px;font-size:12px;color:var(--mut);text-align:center}.foot a{color:var(--pri);cursor:pointer;text-decoration:underline}
+.back{background:none;border:none;color:var(--mut);cursor:pointer;font-size:14px;margin-bottom:8px}
+/* Consentimiento */
+.ov{position:fixed;inset:0;background:rgba(44,62,53,.55);display:flex;justify-content:center;align-items:center;padding:18px;z-index:50;overflow-y:auto}.ov.off{display:none}
+.cbox{background:#fff;border-radius:var(--r);max-width:560px;width:100%;padding:26px;font-size:14px}
+.cbox p,.cbox li{color:var(--mut);margin-bottom:7px}.cbox ul{padding-left:20px}
+.ck{display:flex;gap:10px;margin:12px 0;cursor:pointer}.ck input{accent-color:var(--pri);margin-top:4px}
+/* Rincón de juegos (colorido) */
+.gcards{display:grid;gap:12px}.gc{background:#fff;border:1px solid var(--bd);border-left:4px solid var(--pri);color:var(--txt);border-radius:14px;padding:16px 18px;text-align:left;cursor:pointer;display:flex;gap:14px;align-items:center;transition:all .2s}.gc:hover{background:var(--pri-l);transform:translateY(-2px)}
+.choice b,.gc b{margin-bottom:2px}.gc b{display:block;font-size:16px;color:var(--pri)}.gc span{font-size:13px;color:var(--mut)}
+.ins{text-align:center;color:var(--pri-h);font-size:14px;background:#f0f7f3;border:1px dashed #b9d3c3;padding:11px;border-radius:12px;margin-bottom:16px}
+.arena{height:190px;border-radius:16px;background:linear-gradient(135deg,#eef6f1,#dcebe2);position:relative;overflow:hidden}
+.arena .cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:26px;line-height:1;color:#9fbfae;user-select:none}
+.w{position:absolute;top:50%;transform:translateY(-50%);width:36%;text-align:center;white-space:nowrap;font-size:21px;font-weight:700;color:var(--pri-h);user-select:none}.w.l{left:4%}.w.r{right:4%}.star{position:absolute;font-size:38px;cursor:pointer;display:none;animation:pop .25s}
+@keyframes pop{from{transform:scale(.3)}to{transform:scale(1)}}
+.tapbar{height:20px;background:var(--pri-l);border-radius:12px;overflow:hidden;margin:16px 0}.tapbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8fb39f,#3b6347);transition:width .1s}
+.tap{width:104px;height:104px;border-radius:50%;border:6px solid #d3e5da;background:linear-gradient(135deg,#4a7c59,#3b6347);color:#fff;font-weight:800;font-size:15px;cursor:pointer;display:block;margin:0 auto;box-shadow:0 8px 20px rgba(59,99,71,.3)}.tap:active{transform:scale(.94)}
+.plant{font-size:76px;text-align:center;margin:8px 0;transition:transform .3s}
+.task{display:flex;gap:10px;align-items:center;background:#f0f7f3;border:1px solid #cfe0d6;padding:11px 14px;border-radius:12px;margin-bottom:8px;cursor:pointer}.task input{accent-color:#3b6347;width:18px;height:18px}
+.msg{text-align:center;color:var(--pri);font-weight:600;margin-top:12px;min-height:24px}
+
+.top{display:flex;justify-content:space-between;align-items:center;margin:-8px 0 22px;padding-bottom:14px;border-bottom:1px solid var(--bd)}
+.chip{background:var(--pri-l);color:var(--pri);border-radius:20px;padding:5px 13px;font-size:12.5px;font-weight:600;margin-right:8px}
+.btn.sm{padding:7px 16px;font-size:13px}.btn.danger{background:#b85450}
+.inp{width:100%;padding:12px 14px;border:1px solid var(--bd);border-radius:12px;font-size:15px;margin:7px 0;color:var(--txt);background:#fff}.inp:focus{outline:3px solid var(--pri-l);border-color:var(--pri)}
+.care{background:#eef6f1;border-left:4px solid var(--pri);padding:11px 14px;border-radius:8px;font-size:13px;color:var(--pri);margin-bottom:14px}
+.tabs{display:flex;gap:6px;background:var(--pri-l);padding:5px;border-radius:12px;margin:14px 0}.tb{flex:1;border:none;background:none;padding:10px;border-radius:8px;font-weight:600;color:var(--pri);cursor:pointer}.tb.on{background:var(--pri);color:#fff}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:8px}.item small{display:block;color:var(--mut)}
+.badge{font-size:11px;padding:2px 9px;border-radius:12px;background:var(--pri-l);color:var(--pri);font-weight:700}.badge.off{background:#f5e5e5;color:#a04444}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}.stat{background:var(--acc-l);border:1px solid #cfe0d6;border-radius:12px;padding:12px;text-align:center;font-size:12.5px;color:var(--pri-h)}.stat b{font-size:24px;display:block}
+.err{color:#a04444;font-size:13.5px;margin-top:8px;min-height:20px}
+.rlv{border:2px solid;border-radius:14px;padding:14px;text-align:center;margin:14px 0}.rlv small{display:block;color:var(--mut)}.rlv b{font-size:28px}
+#rep h2{font-size:17px;margin:14px 0 6px}#rep p{color:var(--txt)}
+.gbox{border-top:1px dashed var(--bd);margin-top:10px;padding-top:14px;text-align:center}.gbox .foot{margin-top:6px}
+.tt-w{overflow-x:auto;margin:8px 0 4px}.tt{width:100%;border-collapse:collapse;font-size:12.5px}.tt th{background:var(--pri-l);color:var(--pri-h);text-align:left;padding:6px 8px;font-weight:700;white-space:nowrap}
+.tt td{padding:6px 8px;border-bottom:1px solid var(--bd);vertical-align:top}.tt td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.res{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:#fff}.res h3{font-size:15px;color:var(--pri);margin-bottom:2px}.res small{color:var(--mut)}
+details.raw{margin-top:12px;font-size:12.5px}details.raw summary{cursor:pointer;color:var(--mut)}details.raw pre{background:#f6faf7;border:1px solid var(--bd);border-radius:10px;padding:10px;overflow:auto;max-height:260px;font-size:11.5px;margin-top:6px}
+
+/* Juego 3: Mi planta por etapas */
+.dots{display:flex;gap:8px;justify-content:center;margin:2px 0 8px}.dots i{width:11px;height:11px;border-radius:50%;background:var(--pri-l);border:1px solid var(--bd);transition:all .3s}.dots i.on{background:var(--pri);border-color:var(--pri)}.dots i.cur{transform:scale(1.35);border-color:var(--pri)}
+.stage{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin:6px 0 12px}.stage h3{color:var(--pri);font-size:16px;margin-bottom:4px}.stage p{font-size:14.5px;color:var(--txt)}
+.popt{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px 15px;margin-bottom:9px;font-size:14.5px;cursor:pointer;color:var(--txt);transition:all .2s}.popt:hover:not(:disabled){background:var(--pri-l);border-color:var(--pri)}.popt:disabled{cursor:default}.popt.pick{background:var(--pri-l);border-color:var(--pri);box-shadow:inset 4px 0 0 var(--pri)}
+.popt b{display:block;color:var(--pri);margin-bottom:2px;font-size:14px}
+.pfb{background:#f0f7f3;border:1px dashed #b9d3c3;border-radius:12px;padding:11px 14px;font-size:14px;color:var(--pri-h);margin:4px 0 6px}
+.pend{text-align:center;border:2px solid var(--pri);border-radius:14px;padding:14px;margin:8px 0;background:#fff}.pend b{display:block;font-size:18px;color:var(--pri)}
+details.pat{margin-top:8px;font-size:13.5px;color:var(--mut)}details.pat summary{cursor:pointer;color:var(--pri);font-weight:600}
+.plant.grow{animation:grow .6s ease}@keyframes grow{0%{transform:scale(.7)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+/* Chat */
+.chat{display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:16px;background:#fff;overflow:hidden}
+.chead{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--pri-l);border-bottom:1px solid var(--bd)}.chead .av{width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid var(--bd)}.chead b{display:block;color:var(--pri);font-size:15px;line-height:1.2}.chead small{color:var(--mut);font-size:12px}
+.cmode{margin-left:auto;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:12px;background:#fff;color:var(--pri);border:1px solid var(--bd);cursor:pointer;white-space:nowrap}.cmode.nodata{color:#7a6a2a;background:#fff9dc;border-color:#e6d48a}
+.cbody{height:340px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,#fbfdfc,#f3f8f5);scroll-behavior:smooth}
+.bub{max-width:86%;padding:10px 13px;border-radius:16px;font-size:14.5px;line-height:1.5;animation:in .25s ease;word-wrap:break-word}.bub.bot{background:#fff;border:1px solid var(--bd);border-bottom-left-radius:4px;align-self:flex-start;color:var(--txt)}.bub.me{background:var(--pri);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+.bub ul{margin:6px 0 2px 18px}.bub li{margin:3px 0}.bub .qr{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.qb{border:1px solid var(--pri);background:#fff;color:var(--pri);border-radius:16px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}.qb:hover{background:var(--pri);color:#fff}
+.typing{display:flex;gap:4px;padding:12px 14px}.typing i{width:7px;height:7px;border-radius:50%;background:#9fbfae;animation:tp 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}@keyframes tp{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+.cmenu{border-top:1px solid var(--bd);background:#f7fbf9;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.cmenu[hidden]{display:none}
+.mt{display:flex;gap:8px;align-items:center;text-align:left;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:9px 11px;font-size:13px;font-weight:600;color:var(--pri);cursor:pointer;transition:all .15s}.mt:hover{background:var(--pri-l);border-color:var(--pri)}.mt span{font-size:18px}.mt.alert{border-color:#e3b3b0;color:#a04444}.mt.alert:hover{background:#fbeceb}
+.cin{display:flex;gap:8px;padding:10px;border-top:1px solid var(--bd);background:#fff;align-items:center}.cin .inp{margin:0;flex:1}.cin .btn{padding:11px 18px}.mbtn{border:1px solid var(--bd);background:var(--pri-l);color:var(--pri);border-radius:12px;padding:10px 12px;font-size:14px;font-weight:700;cursor:pointer}
+.breath{width:84px;height:84px;border-radius:50%;margin:10px auto 4px;background:radial-gradient(circle,#cfe5d8,#8fb39f);animation:br 10s ease-in-out infinite;display:flex;align-items:center;justify-content:center;color:#2d4f37;font-size:12px;font-weight:700}@keyframes br{0%,100%{transform:scale(.7)}40%{transform:scale(1.25)}50%{transform:scale(1.25)}}
+@media (max-width:480px){.cmenu{grid-template-columns:1fr}.cbody{height:300px}.bub{max-width:92%}}
+@media (prefers-reduced-motion:reduce){.breath,.typing i,.plant.grow{animation:none}.bub{animation:none}.cbody{scroll-behavior:auto}}
+/* Juegos e informe: amarillo clarito que se funde con el verde (clase .play en <body>) */
+body.play{background:linear-gradient(135deg,#fdf8e4 0%,#f2f0d3 55%,#e1ecdb 100%) fixed}
+.play .wrap{background:rgba(255,252,240,.94);border-color:#eadfae;box-shadow:0 12px 32px rgba(150,125,40,.13)}
+.play .top{border-bottom-color:#eadfae}.play .chip{background:#f6efc9;color:#6b5514}.play .btn.soft{background:#f6efc9;color:#6b5514}
+.play .gc,.play .res{border-color:#eadfae;border-left-color:#d9b84a}.play .gc:hover{background:#fbf3cf}
+.play .ins{background:#fff9dc;border-color:#e6d48a;color:#6b5a1a}
+.play .arena{background:linear-gradient(135deg,#fff9e0,#f3ecc3)}
+.play .tapbar,.play .meter{background:#f3ecc3}.play .tapbar i,.play .meter i{background:linear-gradient(90deg,#f0d77a,#6f9f7f)}
+.play .task{background:#fffbe8;border-color:#eadfae}
+.play .note{background:#fff9dc;border-color:#eadfae;color:#6b5a1a}
+.play .stage,.play .popt,.play .pend{background:#fffdf3;border-color:#eadfae}.play .popt:hover:not(:disabled){background:#fbf3cf}.play .pfb{background:#fff9dc;border-color:#e6d48a;color:#6b5a1a}.play .dots i.on{background:#6f9f7f}
+.play .rlv{background:#fffbe8}.play .tips li{color:#5e6a4a}.play #rep h2{color:var(--pri-h)}
+@media print{body,body.play{background:#fff!important;padding:0}#bgCanvas,.top,.back,.no-print,.ov{display:none!important}.wrap,.play .wrap{background:#fff!important;box-shadow:none!important;border:none!important;max-width:100%}}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas" aria-hidden="true"></canvas>
+<div class="wrap">
+
+<header id="top" class="top" style="display:none"><b style="color:var(--pri)">🌱 Mente en Calma</b><div><span class="chip" id="chip"></span><button class="btn soft sm" onclick="exitClick()">Salir</button></div></header>
+<section id="v-login" class="view on">
+  <div class="icon">🌱</div><h1>Mente en Calma</h1>
+  <p class="sub">Un espacio sereno para escucharte y orientarte. Entra con un alias: no necesitas tu nombre real ni tu correo.</p>
+  <input class="inp" id="alias" maxlength="24" placeholder="Elige un alias (3 a 24 letras o números)" autocomplete="off">
+  <input class="inp" type="password" id="lpass" placeholder="Contraseña (mínimo 8 caracteres)" autocomplete="off"><div class="row" style="margin-top:8px"><button class="btn" onclick="goUser(false)">Entrar</button><button class="btn soft" onclick="goUser(true)">Crear cuenta</button></div>
+  <p class="err" id="lmsg"></p>
+  <div class="gbox"><button class="btn soft" onclick="goGuest()">Continuar como invitado</button><p class="foot">Sin cuenta: tus resultados no se guardan y se borran al salir.</p></div>
+  <div class="foot"><a onclick="showAdminLogin()">Acceso de administrador</a></div>
+</section>
+<section id="v-adminlogin" class="view">
+  <button class="back" onclick="show('v-login')">← Volver</button><h2>Acceso de administrador</h2>
+  <p class="sub" id="ahint" style="text-align:left"></p>
+  <input class="inp" id="aalias" maxlength="24" placeholder="Usuario de administrador" value="admin" autocomplete="off"><input class="inp" type="password" id="apass" placeholder="Contraseña" autocomplete="off"><button class="btn" onclick="adminLogin()">Entrar</button><p class="err" id="amsg"></p>
+</section>
+<section id="v-quizlist" class="view">
+  <button class="back" onclick="show('v-home')">← Volver</button><h2>Cuestionarios</h2>
+  <div class="care" id="careList">Lo que respondas son datos sensibles y se tratan con el máximo cuidado: se guardan cifrados en el servidor de la plataforma, no se comparten con terceros (el administrador solo los ve si tú lo autorizaste) y puedes omitir preguntas, parar, descargar o borrar tus datos cuando quieras.</div><div id="ql"></div>
+</section>
+<section id="v-admin" class="view">
+  <h2>Panel de administración</h2>
+  <div class="tabs"><button class="tb on" onclick="adminTab('g')">Juegos</button><button class="tb" onclick="adminTab('q')">Cuestionarios</button><button class="tb" onclick="adminTab('p')">Participantes</button><button class="tb" onclick="adminTab('s')">Sistema</button></div>
+  <div id="ad-g" class="pane"></div><div id="ad-q" class="pane" style="display:none"></div><div id="ad-p" class="pane" style="display:none"></div><div id="ad-s" class="pane" style="display:none"></div>
+  <div class="care" style="margin-top:16px">Los datos están cifrados (AES-256-GCM). El panel muestra datos agregados; los resultados individuales solo se pueden consultar si la persona lo autorizó al crear su cuenta, y cada consulta queda registrada y visible para ella. Los invitados no se guardan y nadie puede verlos. Usa siempre HTTPS en producción.</div>
+</section>
+<section id="v-report" class="view"><button class="back" onclick="show('v-home')">← Volver</button><div id="rep"></div><div class="row no-print"><button class="btn" onclick="window.print()">Imprimir / guardar PDF</button></div></section>
+<!-- INICIO -->
+<section id="v-home" class="view">
+  <h1>Espacio de Bienestar</h1>
+  <p class="sub">Aquí no hay respuestas correctas ni incorrectas. Todo es opcional y puedes parar cuando quieras. Elige por dónde empezar.</p>
+  <button class="choice" onclick="openQuizList()"><div><b>Cuestionarios</b><span>Responde a tu ritmo y recibe una pequeña guía</span></div></button>
+  <button class="choice" onclick="openReport()"><div><b>Mi informe</b><span>Orientación sobre qué tan conveniente es consultar a un psicólogo</span></div></button><button class="choice fun" id="homeGames" onclick="openArcade()"><div><b>¿Quieres probar los juegos?</b><span>Actividades cortas y divertidas, en un espacio aparte</span></div></button>
+  <button class="choice fun" id="homeChat" onclick="openChat()"><div><b>Conversar con Calma <span class="badge" style="margin-left:6px">Ejemplo visual</span></b><span>Un asistente de muestra que usa tus resultados para responderte de forma más personal</span></div></button>
+  <div class="foot">Herramienta de bienestar general: no diagnostica ni reemplaza a un profesional.<br>Si necesitas ayuda ahora: emergencias <b>123</b> · Bogotá, Línea <b>106</b><br><span id="shareLine"></span><br><span id="dataLinks"><a onclick="exportMine()">Descargar mis datos</a> · <a onclick="withdraw()">Retirar mi consentimiento y borrar mis datos</a></span><span id="guestLine" style="display:none">Modo invitado: nada de lo que hagas se guarda; al pulsar Salir se borra todo.</span></div>
+</section>
+
+<!-- CUESTIONARIO -->
+<section id="v-quiz" class="view">
+  <button class="back" onclick="quizBack()">← Atrás</button><div class="care" id="careQuiz">Tus respuestas son datos sensibles y se tratan con el máximo cuidado. Si algo te incomoda, puedes parar cuando quieras. Ayuda: 123 · Bogotá, Línea 106.</div>
+  <div class="prog"><i id="qbar"></i></div>
+  <p class="sub" style="margin-bottom:6px" id="qcount"></p>
+  <h2 id="qtext" style="text-align:center;margin-bottom:18px"></h2>
+  <div id="qopts"></div>
+</section>
+
+<!-- RESULTADO / GUÍA -->
+<section id="v-result" class="view">
+  <div class="icon" id="rico">🌿</div><h1 id="rtit"></h1>
+  <div class="meter"><i id="rbar"></i></div>
+  <p class="sub" id="rtxt" style="margin-bottom:12px"></p>
+  <h2 style="font-size:16px">Una pequeña guía para hoy</h2><ul class="tips" id="rtips"></ul>
+  <div class="note" id="rnote"></div>
+  <div class="row"><button class="btn" onclick="openReport()">Generar mi informe</button><button class="btn soft" onclick="show('v-home')">Volver al inicio</button><button class="btn" onclick="openArcade()">Probar los juegos</button></div>
+</section>
+
+
+<!-- CHAT (ejemplo visual temporal) -->
+<section id="v-chat" class="view">
+  <button class="back" onclick="show('v-home')">← Volver al inicio</button>
+  <h1 style="margin-bottom:2px">Conversar con Calma</h1>
+  <p class="sub" style="margin-bottom:12px">Ejemplo visual: responde con mensajes predefinidos y no es una persona ni una IA clínica. Usa solo lo que ya hiciste aquí y no envía nada a ningún lado.</p>
+  <div class="chat">
+    <div class="chead"><div class="av">🌿</div><div><b>Calma</b><small>Asistente (demo)</small></div><button class="cmode" id="cmode" onclick="chatTopic('datos')" title="Ver qué datos usa"></button></div>
+    <div class="cbody" id="cbody" aria-live="polite"></div>
+    <div class="cmenu" id="cmenu"></div>
+    <div class="cin"><button class="mbtn" id="cmbtn" onclick="toggleMenu()" aria-label="Mostrar u ocultar el menú de temas">☰ Temas</button><input class="inp" id="cinp" maxlength="300" placeholder="Escribe aquí…" autocomplete="off" onkeydown="if(event.key==='Enter')chatSend()"><button class="btn" onclick="chatSend()">Enviar</button></div>
+  </div>
+  <p class="foot">No diagnostica ni reemplaza a un profesional. Si necesitas ayuda ahora: <b>123</b> · Bogotá, Línea <b>106</b>.</p>
+</section>
+
+<!-- RINCÓN DE JUEGOS -->
+<section id="v-arcade" class="view">
+  <button class="back" onclick="closeArcade()">← Volver al inicio</button>
+  <h1>Rincón de Juegos</h1>
+  <p class="sub">Sin puntajes ni presión. Juega a tu ritmo y sal cuando quieras.</p>
+  <p class="sub" id="nogames" style="display:none">Por ahora no hay juegos disponibles. Vuelve pronto.</p><div id="a-hub" class="gcards">
+    <button class="gc g1" onclick="openGame(1)"><div><b>Atrapa la estrella</b><span>Reflejos · 8 rondas cortas</span></div></button>
+    <button class="gc g2" onclick="openGame(2)"><div><b>Impulso de energía</b><span>Elige tu meta según cómo te sientes hoy</span></div></button>
+    <button class="gc g3" onclick="openGame(3)"><div><b>Mi planta</b><span>Cuida cada etapa en el orden que necesita para que florezca</span></div></button>
+  </div>
+
+  <div id="a-g1" class="view">
+    <button class="back" onclick="openGame(0)">← Otros juegos</button>
+    <p class="ins">Mira el centro (+). Aparecen dos palabras y luego una estrella ⭐. Tócala lo más rápido que puedas. Algunas palabras pueden ser incómodas; puedes parar cuando quieras.</p>
+    <div class="arena"><span class="w l" id="wl"></span><span class="cross" id="cross">+</span><span class="w r" id="wr"></span><span id="star" class="star" onclick="starClick()">⭐</span></div>
+    <div class="msg" id="g1msg"></div>
+    <div class="row"><button class="btn" id="g1btn" onclick="startG1()">¡Empezar!</button></div>
+  </div>
+
+  <div id="a-g2" class="view">
+    <button class="back" onclick="openGame(0)">← Otros juegos</button>
+    <p class="ins">¿Cuánta energía tienes hoy? Cualquier elección está bien. Llena la barra tocando el botón.</p>
+    <div id="g2sel" class="gcards">
+      <button class="gc g2" onclick="pickEffort('facil')"><div><b>Meta tranquila</b><span>Esfuerzo bajo · recompensa básica</span></div></button>
+      <button class="gc g1" onclick="pickEffort('dificil')"><div><b>Meta retadora</b><span>Esfuerzo alto · gran recompensa</span></div></button>
+    </div>
+    <div id="g2play" style="display:none"><div class="tapbar"><i id="tbar"></i></div><button class="tap" onclick="tap()">¡TOCA!</button></div>
+    <div class="msg" id="g2msg"></div>
+  </div>
+
+  <div id="a-g3" class="view">
+    <button class="back" onclick="openGame(0)">← Otros juegos</button>
+    <p class="ins">Cuida tu planta en 4 etapas. Todas las opciones son gestos amables, pero no todas sirven en cada momento: lee con atención qué necesita ahora.</p>
+    <div class="plant" id="plant">🌰</div><div class="msg" id="pstat" style="margin-top:0">Semilla recién sembrada</div>
+    <div class="dots" id="pdots"></div>
+    <div id="pbox"></div>
+  </div>
+  <div class="note" id="sum" style="display:none"></div>
+</section>
+</div>
+
+<!-- CONSENTIMIENTO -->
+<div id="ov" class="ov off"><div class="cbox" role="dialog" aria-modal="true">
+  <h2>Antes de empezar</h2>
+  <p>Para ofrecerte una guía, esta página registra algunos datos de tu interacción:</p>
+  <ul><li><b>Cuestionario:</b> tus respuestas y el puntaje resultante.</li><li><b>Juegos:</b> tiempos de reacción, la meta que eliges y los hábitos que marcas.</li></ul>
+  <p><b>Finalidad:</b> mostrarte un resumen, una guía y, si lo pides, un informe orientativo sobre qué tan conveniente es consultar a un psicólogo (basado solo en el cuestionario WHO-5, no en los juegos). No es un diagnóstico.</p>
+  <p><b>Tratamiento:</b> tu alias, tus respuestas y los resultados de los juegos se guardan en la base de datos del servidor de esta plataforma, con cifrado y copias de seguridad cifradas. No se comparten con terceros y se tratan con el máximo cuidado: el administrador solo ve datos agregados (salvo que marques la autorización opcional de más abajo), puedes omitir preguntas sensibles, descargar tus datos y borrarlos cuando quieras. Participar es voluntario y puedes no aceptar sin consecuencia alguna.</p>
+  <p>Los datos sobre estado emocional son información sensible y solo se tratan con tu autorización expresa (p. ej., Ley 1581 de 2012, Colombia). Si se usa en un servicio real, requiere política de tratamiento de datos y revisión legal.</p>
+  <label class="ck"><input type="checkbox" id="ck" onchange="$('acc').disabled=!this.checked"><span>He leído la información y autorizo de forma libre y expresa el registro de estos datos para los fines descritos.</span></label>
+  <label class="ck"><input type="checkbox" id="ck2"><span><b>Opcional.</b> Autorizo que el administrador de la plataforma consulte mis resultados individuales (respuestas del cuestionario y datos de los juegos) con fines técnicos y de seguimiento. Puedo retirar esta autorización cuando quiera. Si no la marcas, el administrador solo verá datos agregados y podrás usar la plataforma igual.</span></label>
+  <div class="row" style="justify-content:flex-start"><button class="btn" id="acc" disabled onclick="acceptP()">Acepto y continúo</button><button class="btn soft" onclick="declineP()">No acepto</button></div>
+</div></div>
+
+<!-- INVITADO -->
+<div id="ovg" class="ov off"><div class="cbox" role="dialog" aria-modal="true">
+  <h2>Entrar como invitado</h2>
+  <p>Puedes responder el cuestionario, jugar y ver tus resultados e informe sin crear una cuenta.</p>
+  <ul><li>No se guarda nada en la base de datos ni en las copias de seguridad: solo existe en la memoria temporal del servidor mientras dure tu visita.</li><li>Nadie, ni siquiera el administrador, puede ver lo que hagas.</li><li>Al pulsar <b>Salir</b> o cerrar la página todo se borra y <b>no se puede recuperar</b>. Si quieres conservar tu informe, imprímelo o guárdalo en PDF antes de salir.</li></ul>
+  <p>El contenido es sensible y orientativo, no un diagnóstico. Ayuda: 123 · Bogotá, Línea 106.</p>
+  <div class="row" style="justify-content:flex-start"><button class="btn" onclick="startGuest()">Entiendo, continuar</button><button class="btn soft" onclick="$('ovg').classList.add('off')">Cancelar</button></div>
+</div></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length):null;
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ===== Configuración (fácil de reemplazar por tu propio cuestionario) ===== */
+let QUIZ={ // WHO-5 (Índice de Bienestar de la OMS): 0 = Nunca … 5 = Todo el tiempo
+  intro:'En las últimas dos semanas…',
+  items:['Me he sentido alegre y de buen humor','Me he sentido tranquilo/a y relajado/a','Me he sentido activo/a y con energía','Me he despertado sintiéndome fresco/a y descansado/a','Mi día a día ha tenido cosas que me interesan'],
+  opts:['Nunca','De vez en cuando','Menos de la mitad del tiempo','Más de la mitad del tiempo','La mayor parte del tiempo','Todo el tiempo']
+};
+const BANDS=[ // porcentaje mínimo → mensaje (orientación general, no diagnóstico)
+ {min:68,ico:'🌸',t:'Te sientes con buen ánimo',d:'Tus respuestas sugieren un bienestar bueno en estas semanas.',tips:['Sigue con las rutinas que te hacen bien.','Comparte tiempo con personas que aprecias.','Anota qué te ayudó, para recordarlo en días difíciles.']},
+ {min:50,ico:'🌿',t:'Vas por buen camino',d:'Tu bienestar parece moderado: hay cosas que van bien y otras que podrían mejorar.',tips:['Procura dormir a horas regulares.','Sal a caminar o muévete unos minutos cada día.','Habla con alguien de confianza sobre cómo te sientes.']},
+ {min:28,ico:'🌱',t:'Quizá necesites cuidarte un poco más',d:'Tus respuestas sugieren que estas semanas han sido pesadas. No estás solo/a y hay maneras de sentirte mejor.',tips:['Elige una sola cosa pequeña y amable para ti hoy.','Cuéntale a una persona cercana cómo te has sentido.','Considera hablar con un profesional de la salud: pedir apoyo es un paso valiente.']},
+ {min:0,ico:'💛',t:'Gracias por ser sincero/a contigo',d:'Tus respuestas indican que lo has pasado difícil. Mereces apoyo, y te animamos a buscarlo pronto.',tips:['Habla hoy con alguien de confianza.','Agenda una cita con un profesional de salud o de salud mental.','Si te sientes en peligro o con ganas de hacerte daño, llama ya al 123 o, en Bogotá, a la Línea 106.']}
+];
+const NEG=['fracaso','soledad','tristeza','miedo','culpa','vacío'],NEU=['mesa','camino','ventana','papel','nube','reloj'];
+const TRIALS=8,GOALS={facil:12,dificil:32};
+
+/* ===== Estado (solo en memoria) ===== */
+let consent=false,qi=0,answers=[];
+let S=fresh();function fresh(){return{neg:[],neu:[],effort:null,done:false,tasks:0,plant:null,wb:null,calma:null}}
+let P={run:false,n:0,at:0,onNeg:false,t:null},T={goal:0,c:0,lv:null};
+
+/* ===== Navegación ===== */
+function show(id){
+  document.querySelectorAll('.wrap>.view').forEach(v=>v.classList.toggle('on',v.id===id));
+  const warm=id==='v-arcade'||id==='v-report'||id==='v-chat';document.body.classList.toggle('play',warm);if(window.bgTheme)bgTheme(warm?'warm':'green');
+  window.scrollTo(0,0);
+}
+function accept(){if(!$('ck').checked)return;consent=true;$('ov').classList.add('off')}
+function decline(){
+  $('ov').classList.add('off');
+  document.querySelector('#v-home .sub').textContent='No aceptaste el registro de datos, así que no se activó ninguna actividad y no se guardó nada. Recarga la página si cambias de opinión.';
+  document.querySelectorAll('#v-home .choice').forEach(b=>b.disabled=true);
+}
+function withdrawOld(){
+  stopG1();resetG2();resetG3(true);chatReset();
+  S=fresh();answers=[];qi=0;consent=false;$('ck').checked=false;$('acc').disabled=true;$('sum').style.display='none';
+  show('v-home');$('ov').classList.remove('off');
+}
+
+/* ===== Cuestionario ===== */
+
+function renderQ(){
+  $('qcount').textContent=QUIZ.intro+' · Pregunta '+(qi+1)+' de '+QUIZ.items.length;
+  $('qbar').style.width=(qi/QUIZ.items.length*100)+'%';
+  $('qtext').textContent=QUIZ.items[qi];
+  $('qopts').innerHTML='';
+  for(let v=QUIZ.opts.length-1;v>=0;v--){
+    const b=document.createElement('button');b.className='opt'+(answers[qi]===v?' sel':'');b.textContent=QUIZ.opts[v];
+    b.onclick=()=>answer(v);$('qopts').appendChild(b);
+  }
+}
+function answer(v){answers[qi]=v;qi++;qi<QUIZ.items.length?renderQ():finishQuiz()}
+function quizBack(){if(qi>0){qi--;renderQ()}else show('v-home')}
+function finishWho5(){
+  const pct=Math.round(answers.reduce((a,b)=>a+b,0)*4);S.wb=pct;
+  const b=BANDS.find(x=>pct>=x.min);
+  $('rico').textContent=b.ico;$('rtit').textContent=b.t;$('rtxt').textContent=b.d;
+  $('rbar').style.width='0';setTimeout(()=>$('rbar').style.width=pct+'%',60);
+  $('rtips').innerHTML=b.tips.map(t=>'<li>'+t+'</li>').join('');
+  $('rnote').innerHTML='Este resultado es orientativo y <b>no es un diagnóstico</b>. Si lo necesitas, busca apoyo profesional. Emergencias: <b>123</b> · Bogotá: Línea <b>106</b>.';
+  show('v-result');
+}
+
+/* ===== Rincón de juegos ===== */
+function openArcade(){if(!consent)return;openGame(0);show('v-arcade')}
+function closeArcade(){stopG1();show('v-home')}
+function openGame(n){
+  stopG1();
+  $('a-hub').style.display=n?'none':'grid';
+  [1,2,3].forEach(i=>$('a-g'+i).classList.toggle('on',i===n));
+  if(n===2)resetG2();
+  if(n===3&&!G3.run&&!G3.end)startG3();
+  summary();
+}
+function summary(){
+  const a=avg(S.neg),b=avg(S.neu),box=$('sum');
+  if(a===null&&b===null&&!S.effort&&S.plant===null){box.style.display='none';return}
+  box.style.display='block';
+  box.innerHTML='<b>Tu resumen (guardado en este navegador):</b> '+
+   (a!==null||b!==null?'Reflejos: '+(a??'–')+' ms tras palabra negativa, '+(b??'–')+' ms tras neutra. ':'')+
+   (S.effort?'Energía: meta '+(S.effort==='facil'?'tranquila':'retadora')+(S.done?' completada. ':'. '):'')+
+   (S.plant!==null?'Mi planta: '+plantEnd(S.plant).t+'. ':'')+'<em>No tiene valor diagnóstico.</em>';
+}
+
+/* Juego 1 */
+function clearArena(){$('wl').textContent='';$('wr').textContent='';$('star').style.display='none'}
+function stopG1(){clearTimeout(P.t);P.run=false;P.at=0;clearArena();const b=$('g1btn');if(b){b.disabled=false;b.textContent='¡Empezar!'}}
+function startG1(){
+  if(!consent||P.run)return;
+  P={run:true,n:0,at:0,onNeg:false,t:null};S.neg=[];S.neu=[];
+  $('g1btn').disabled=true;$('g1msg').textContent='';nextTrial();
+}
+function nextTrial(){
+  if(!P.run)return;
+  if(P.n>=TRIALS){stopG1();$('g1btn').textContent='Jugar otra vez';$('g1msg').textContent='¡Muy bien, terminaste! Gracias por jugar.';summary();return}
+  P.n++;$('g1btn').textContent='Ronda '+P.n+' de '+TRIALS;clearArena();
+  P.t=setTimeout(()=>{
+    const negL=Math.random()<.5;
+    $('wl').textContent=pick(negL?NEG:NEU);$('wr').textContent=pick(negL?NEU:NEG);
+    P.t=setTimeout(()=>{
+      clearArena();
+      const left=Math.random()<.5,s=$('star');P.onNeg=(left===negL);
+      s.style.top='calc(50% - 19px)';s.style.left=left?'18%':'';s.style.right=left?'':'18%';
+      s.style.display='block';P.at=performance.now();
+    },500);
+  },600);
+}
+function starClick(){
+  if(!consent||!P.run||!P.at)return;
+  (P.onNeg?S.neg:S.neu).push(Math.round(performance.now()-P.at));P.at=0;
+  $('star').style.display='none';summary();P.t=setTimeout(nextTrial,400);
+}
+
+/* Juego 2 */
+function resetG2(){T={goal:0,c:0,lv:null};$('tbar').style.width='0';$('g2play').style.display='none';$('g2sel').style.display='grid';$('g2msg').textContent=''}
+function pickEffort(lv){
+  if(!consent)return;T={goal:GOALS[lv],c:0,lv};S.effort=lv;S.done=false;
+  $('tbar').style.width='0';$('g2sel').style.display='none';$('g2play').style.display='block';$('g2msg').textContent='¡Tú puedes! Toca el botón.';
+}
+function tap(){
+  if(!consent||!T.goal||T.c>=T.goal)return;
+  $('tbar').style.width=Math.round(++T.c/T.goal*100)+'%';
+  if(T.c>=T.goal){
+    S.done=true;$('g2msg').textContent=T.lv==='facil'?'¡Meta cumplida! Cada paso cuenta.':'¡Meta cumplida! ¡Qué energía!';
+    summary();setTimeout(()=>{$('g2play').style.display='none';$('g2sel').style.display='grid'},1800);
+  }
+}
+
+/* Juego 3: Mi planta por etapas.
+   Todas las opciones son gestos amables. Cada etapa describe lo que la planta necesita en ese momento;
+   la misma acción sirve (2 pts), sirve a medias (1) o aún no hace falta (0) según la etapa. Máximo 8 pts.
+   El patrón es agua → luz → alimento → calma y tiempo. Las opciones se mezclan en cada partida. */
+const PLANT_STAGES=[
+ {ico:'🌰',t:'La semilla',d:'Acabas de sembrar. La tierra está seca y la semilla aún no tiene raíces: antes que nada necesita humedad suave para despertar.',
+  o:[{k:'agua',n:'Un poco de agua cada mañana',d:'Rociar agua tibia, apenas lo justo para mantener la tierra húmeda.',p:2,f:'La tierra quedó húmeda y la semilla se abrió. ¡Primer paso firme!'},
+     {k:'luz',n:'Un rincón cálido junto a la ventana',d:'Ponerla donde reciba luz y calor suaves de la mañana.',p:1,f:'El calor ayudó un poco, pero sin humedad la semilla despierta despacio.'},
+     {k:'cari',n:'Compañía tranquila',d:'Sentarte a su lado unos minutos, leerle algo y desearle lo mejor.',p:0,f:'Tu compañía es hermosa, aunque la semilla todavía esperaba agua.'}]},
+ {ico:'🌱',t:'El brote',d:'Ya asomaron dos hojitas pálidas, estiradas hacia la ventana. La tierra sigue húmeda desde ayer; lo que busca ahora es energía para volverse verde.',
+  o:[{k:'luz',n:'Luz clara y suave',d:'Moverla a un lugar luminoso, sin sol fuerte directo, para que las hojas se fortalezcan.',p:2,f:'Las hojitas cogieron color y se enderezaron. ¡Qué buen ojo!'},
+     {k:'agua',n:'Un riego un poco más generoso',d:'Darle más agua para que las raíces sigan creciendo.',p:1,f:'Las raíces lo agradecieron, pero la tierra ya estaba húmeda: lo que faltaba era luz.'},
+     {k:'maceta',n:'Una maceta más grande',d:'Pasarla a una maceta amplia con tierra fresca, para que tenga espacio.',p:0,f:'Es un bonito gesto, aunque todavía es pequeña para tanto espacio.'}]},
+ {ico:'🌿',t:'El crecimiento',d:'Las hojas son verdes y firmes, y tiene luz y agua de sobra. Aun así el tallo crece delgado y las hojas nuevas salen pequeñas: le falta alimento.',
+  o:[{k:'abono',n:'Una cucharadita de abono orgánico',d:'Mezclar un poco de abono suave en la tierra para nutrirla.',p:2,f:'Las hojas nuevas salieron más grandes y el tallo se engrosó. ¡Justo lo que necesitaba!'},
+     {k:'luz',n:'Más horas de luz',d:'Acercarla a la ventana para que reciba luz durante más tiempo.',p:1,f:'Disfrutó la luz extra, pero ya tenía suficiente: pedía alimento.'},
+     {k:'limpia',n:'Limpiar sus hojas',d:'Pasar un paño húmedo por las hojas para que brillen y respiren mejor.',p:0,f:'Quedó reluciente, aunque lo que faltaba estaba en la tierra.'}]},
+ {ico:'🪴',t:'El capullo',d:'Apareció un capullo. Ya tuvo agua, luz y alimento. Ahora lo que más le hace falta es calma: que nada cambie y se le dé tiempo para abrir a su ritmo.',
+  o:[{k:'calma',n:'Dejarla tranquila en su lugar',d:'Observarla cada día con paciencia, sin moverla ni añadir nada.',p:2,f:'El capullo se abrió despacio, a su propio ritmo. La paciencia también cuida.'},
+     {k:'abono',n:'Una pizca más de abono',d:'Darle un poco más de alimento para acompañar la floración.',p:1,f:'Con buena intención, pero ya estaba bien alimentada: necesitaba tiempo, no más cosas.'},
+     {k:'vista',n:'Otra ventana con mejor vista',d:'Cambiarla de lugar para que florezca con un paisaje más bonito.',p:0,f:'Lindo detalle; sin embargo, el cambio de sitio la distrajo de abrir en calma.'}]}
+];
+const PLANT_END=[
+ {min:8,ico:'🌻',t:'Floreció por completo',d:'Entendiste lo que necesitaba en cada momento y respetaste su ritmo: agua, luz, alimento y tiempo. ¡Tu planta está radiante!'},
+ {min:5,ico:'🌷',t:'Floreció a medias',d:'El capullo se abrió solo en parte. Hiciste cosas buenas, pero algunas llegaron antes o después de tiempo. Prueba leer con más calma qué pide cada etapa.'},
+ {min:3,ico:'🌿',t:'Quedó a la mitad del camino',d:'Creció fuerte y verde, pero todavía sin flor. Tus cuidados fueron amables; solo faltó acertar con el momento de cada uno.'},
+ {min:0,ico:'🌱',t:'Sigue siendo un brote',d:'Aún está empezando, y eso está bien. Cada intento enseña algo nuevo sobre qué necesita en cada etapa.'}
+];
+const plantEnd=pts=>PLANT_END.find(x=>pts>=x.min);
+let G3={run:false,end:false,i:0,pts:0,picks:[],order:[],lock:false};
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function dotsG3(){$('pdots').innerHTML=PLANT_STAGES.map((_,i)=>'<i class="'+(i<G3.i||G3.end?'on':'')+(i===G3.i&&!G3.end?' cur':'')+'"></i>').join('')}
+function setPlant(ico,txt){const e=$('plant');e.textContent=ico;$('pstat').textContent=txt;e.classList.remove('grow');void e.offsetWidth;e.classList.add('grow')}
+function resetG3(silent){G3={run:false,end:false,i:0,pts:0,picks:[],order:[],lock:false};if(silent){S.plant=null;S.tasks=0;if($('pbox'))$('pbox').innerHTML=''}}
+function startG3(){
+  G3={run:true,end:false,i:0,pts:0,picks:[],order:PLANT_STAGES.map(st=>shuf(st.o.map((_,i)=>i))),lock:false};S.plant=null;S.tasks=0;summary();
+  $('plant').classList.remove('grow');$('plant').textContent='🌰';$('pstat').textContent='Semilla recién sembrada';renderStage();
+}
+function renderStage(){
+  const st=PLANT_STAGES[G3.i];dotsG3();
+  $('pbox').innerHTML='<div class="stage"><h3>Etapa '+(G3.i+1)+' de '+PLANT_STAGES.length+' · '+st.t+'</h3><p>'+st.d+'</p></div>'+
+   G3.order[G3.i].map(oi=>{const o=st.o[oi];return '<button class="popt" onclick="pickPlant('+oi+',this)"><b>'+o.n+'</b>'+o.d+'</button>'}).join('')+'<div id="pfb"></div>';
+}
+function pickPlant(oi,btn){
+  if(!G3.run||G3.lock)return;G3.lock=true;
+  const st=PLANT_STAGES[G3.i],o=st.o[oi];G3.pts+=o.p;G3.picks.push(o.k);
+  document.querySelectorAll('#pbox .popt').forEach(b=>b.disabled=true);btn.classList.add('pick');
+  const last=G3.i===PLANT_STAGES.length-1;
+  $('pfb').innerHTML='<div class="pfb">'+o.f+'</div><div class="row" style="margin-top:6px"><button class="btn" onclick="nextStage()">'+(last?'Ver cómo quedó mi planta':'Siguiente etapa')+'</button></div>';
+  setPlant(st.ico==='🌰'?'🌱':st.ico,st.t);
+}
+function nextStage(){
+  G3.lock=false;G3.i++;
+  if(G3.i>=PLANT_STAGES.length){endG3();return}
+  setPlant(PLANT_STAGES[G3.i].ico,PLANT_STAGES[G3.i].t);renderStage();
+}
+function endG3(){
+  G3.run=false;G3.end=true;dotsG3();const e=plantEnd(G3.pts);
+  S.plant=G3.pts;S.tasks=G3.pts>=8?3:G3.pts>=5?2:G3.pts>=3?1:0;
+  setPlant(e.ico,e.t);
+  $('pbox').innerHTML='<div class="pend"><b>'+e.t+'</b>'+e.d+'</div>'+
+   (G3.pts<8?'<p class="foot" style="margin:6px 0">Pista: cada etapa cuenta qué le falta a la planta en ese momento. El orden importa, y a veces lo mejor es no hacer más.</p>':'')+
+   '<details class="pat"><summary>Ver el patrón completo</summary><p style="margin-top:6px">Primero <b>agua</b> (la semilla despierta), luego <b>luz</b> (el brote se fortalece), después <b>alimento</b> (el tallo se engrosa) y al final <b>calma y tiempo</b> (el capullo abre). Es como cuidarte: cada cosa buena tiene su momento.</p></details>'+
+   '<div class="row"><button class="btn" onclick="startG3()">'+(G3.pts>=8?'Plantar otra vez':'Volver a plantar')+'</button><button class="btn soft" onclick="openGame(0)">Otros juegos</button></div>';
+  summary();
+}
+/* ===== Cliente: comunicación con el servidor ===== */
+let user=null,role=null,ed=null,pending=null,pt,CFG=null,isGuest=false,shareOn=false;
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(u,m='GET',b){
+  const r=await fetch(u,{method:m,headers:b?{'Content-Type':'application/json'}:{},body:b?JSON.stringify(b):undefined,credentials:'same-origin'});
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Error '+r.status);return d;
+}
+const GAMES=[{id:1,n:'Atrapa la estrella'},{id:2,n:'Impulso de energía'},{id:3,n:'Mi planta'}];
+const CUSTOM_OPTS=['Nunca','Casi nunca','A veces','Casi siempre','Siempre'];
+const loadCfg=async()=>CFG=await api('/api/config');
+const gamesCfg=async()=>(await loadCfg()).games;
+
+/* Sesión */
+async function goUser(reg){
+  const a=$('alias').value.trim().toLowerCase(),p=$('lpass').value;
+  if(!/^[\p{L}\p{N}_-]{3,24}$/u.test(a)){$('lmsg').textContent='Usa de 3 a 24 letras o números, sin espacios, y no uses tu nombre real.';return}
+  if(p.length<8){$('lmsg').textContent='La contraseña debe tener al menos 8 caracteres.';return}
+  $('lmsg').textContent='';
+  if(reg){pending={a,p};$('ck').checked=false;$('ck2').checked=false;$('acc').disabled=true;$('ov').classList.remove('off');return}
+  try{await afterLogin(await api('/api/login','POST',{alias:a,password:p}))}catch(e){$('lmsg').textContent=e.message}
+}
+async function afterLogin(r){user=r.alias;role=r.role;consent=role==='user';isGuest=!!r.guest;shareOn=!!r.share;$('lpass').value='';await enter()}
+async function acceptP(){
+  if(!$('ck').checked||!pending)return;
+  try{const r=await api('/api/register','POST',{alias:pending.a,password:pending.p,consent:true,share:$('ck2').checked});pending=null;$('ov').classList.add('off');await afterLogin(r)}
+  catch(e){$('ov').classList.add('off');$('lmsg').textContent=e.message}
+}
+function declineP(){pending=null;$('ov').classList.add('off');$('lmsg').textContent='No aceptaste el registro de datos, por eso no se creó ninguna cuenta ni se guardó nada.'}
+function showAdminLogin(){$('ahint').textContent='Ingresa con tu usuario y clave de administrador. Las cuentas con permiso de administrador las define quien gestiona el servidor.';$('amsg').textContent='';show('v-adminlogin')}
+async function adminLogin(){
+  try{const r=await api('/api/login','POST',{alias:$('aalias').value.trim().toLowerCase(),password:$('apass').value});if(r.role!=='admin')throw new Error('No autorizado.');$('apass').value='';await afterLogin(r)}
+  catch(e){$('amsg').textContent=e.message}
+}
+async function enter(){
+  $('top').style.display='flex';$('chip').textContent=role==='admin'?'Administrador':(isGuest?'Invitado':user);paintMode();
+  if(role==='admin'){adminTab('g');show('v-admin')}
+  else{const g=await gamesCfg();$('homeGames').style.display=Object.values(g).some(Boolean)?'':'none';show('v-home')}
+}
+async function logout(){
+  try{await api('/api/logout','POST',{})}catch(e){}
+  stopG1();resetG2();resetG3(true);chatReset();S=fresh();answers=[];consent=false;user=null;role=null;isGuest=false;shareOn=false;
+  $('top').style.display='none';$('alias').value='';$('lpass').value='';$('apass').value='';$('lmsg').textContent='';show('v-login');
+}
+/* ===== Invitado y permiso de compartir ===== */
+const CARE0={l:$('careList').textContent,q:$('careQuiz').textContent};
+function paintMode(){
+  $('careList').textContent=isGuest?'Lo que respondas son datos sensibles. Como invitado no se guardan: solo existen mientras dure tu visita y se borran al salir. Puedes omitir preguntas y parar cuando quieras.':CARE0.l;
+  $('careQuiz').textContent=isGuest?'Como invitado, tus respuestas no se guardan. Si algo te incomoda, puedes parar cuando quieras. Ayuda: 123 · Bogotá, Línea 106.':CARE0.q;
+  $('dataLinks').style.display=isGuest?'none':'';$('shareLine').style.display=isGuest?'none':'';$('guestLine').style.display=isGuest?'':'none';
+  if(!isGuest)renderShare();
+}
+function renderShare(){$('shareLine').innerHTML='Compartir mis resultados con el administrador: <b>'+(shareOn?'Sí':'No')+'</b> · <a onclick="toggleShare()">'+(shareOn?'Retirar autorización':'Autorizar')+'</a>'}
+async function toggleShare(){
+  const nx=!shareOn;
+  if(nx&&!confirm('¿Autorizas que el administrador consulte tus resultados individuales (respuestas y datos de los juegos) con fines técnicos? Cada consulta queda registrada y puedes retirar la autorización cuando quieras.'))return;
+  try{const r=await api('/api/my/share','PUT',{share:nx});shareOn=r.share;renderShare()}catch(e){alert(e.message)}
+}
+function goGuest(){$('lmsg').textContent='';$('ovg').classList.remove('off')}
+async function startGuest(){$('ovg').classList.add('off');try{await afterLogin(await api('/api/guest','POST',{}))}catch(e){$('lmsg').textContent=e.message}}
+function exitClick(){if(isGuest&&!confirm('Al salir se borrarán todos tus resultados y no se podrán recuperar. ¿Salir?'))return;logout()}
+/* Si el invitado cierra o recarga la página, se borra su sesión en el servidor (además del vencimiento por inactividad) */
+addEventListener('pagehide',e=>{if(isGuest&&!e.persisted){try{navigator.sendBeacon('/api/logout',new Blob(['{}'],{type:'application/json'}))}catch(_){}}});
+
+async function withdraw(){
+  if(!confirm('¿Retirar tu consentimiento y borrar todos tus datos guardados?'))return;
+  try{await api('/api/my/data','DELETE')}catch(e){alert(e.message);return}
+  withdrawOld();$('ov').classList.add('off');await logout();$('lmsg').textContent='Consentimiento retirado y datos borrados.';
+}
+async function exportMine(){
+  try{const d=await api('/api/my/data'),a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='mis_datos.json';a.click()}catch(e){alert(e.message)}
+}
+
+/* Cuestionarios */
+async function openQuizList(){
+  if(!consent)return;const c=await loadCfg();
+  $('ql').innerHTML=c.quizzes.length?c.quizzes.map(q=>`<button class="choice" onclick="pickQuiz('${q.id}')"><div><b>${esc(q.title)}</b><span>${q.items.length} preguntas${q.sensitive?' · contenido sensible':''}</span></div></button>`).join(''):'<p class="sub">No hay cuestionarios disponibles por ahora.</p>';
+  show('v-quizlist');
+}
+function pickQuiz(id){QUIZ=CFG.quizzes.find(q=>q.id===id);qi=0;answers=[];renderQ();show('v-quiz')}
+const _rq=renderQ;renderQ=function(){_rq();
+  if(QUIZ.id!=='who5'){const b=document.createElement('button');b.className='opt';b.style.cssText='border-style:dashed;color:var(--mut)';b.textContent='Prefiero no responder';b.onclick=()=>answer(null);$('qopts').appendChild(b)}};
+/* Cuestionario de calma y carga diaria (10): 0-4 por pregunta; las marcadas como inversas puntúan al revés. Mayor % = más carga. Orientativo. */
+const CALMA_REV=[2,5,8],CALMA_BANDS=[
+ {min:60,ico:'💛',t:'Estás cargando mucho últimamente',d:'Tus respuestas sugieren una carga alta en estas semanas. No tienes que poder con todo tú solo/a.',tips:['Elige una sola tarea para hoy y deja las demás para después.','Cuéntale a alguien de confianza cómo te has sentido.','Considera hablar con un profesional de la salud mental: pedir apoyo es un paso valiente.']},
+ {min:33,ico:'🌿',t:'Llevas una carga moderada',d:'Hay momentos de calma y también de tensión. Pequeños ajustes pueden aliviarte.',tips:['Haz pausas de 2 minutos para respirar hondo entre tareas.','Intenta dormir y levantarte a horas parecidas.','Reserva un rato del día solo para ti, sin pantallas.']},
+ {min:0,ico:'🌸',t:'Te sientes con bastante calma',d:'Tus respuestas sugieren una carga baja y buenos recursos para manejarla.',tips:['Sigue con las rutinas que te hacen bien.','Mantén el contacto con quienes te apoyan.','Anota qué te ayuda, para recordarlo en días difíciles.']}
+];
+function calmaPct(ans){
+  const v=(ans||[]).map((x,i)=>x==null?null:(CALMA_REV.includes(i)?4-x:x)).filter(x=>x!=null);
+  return v.length>=6?Math.round(v.reduce((a,b)=>a+b,0)/(v.length*4)*100):null;
+}
+const calmaBand=pct=>CALMA_BANDS.find(x=>pct>=x.min);
+async function finishQuiz(){
+  const m=$('rbar').parentElement;
+  if(QUIZ.id==='who5'){m.style.display='';finishWho5()}
+  else if(QUIZ.id==='calma10'){
+    const pct=calmaPct(answers);S.calma=pct;m.style.display='';
+    if(pct===null){m.style.display='none';$('rico').textContent='💛';$('rtit').textContent='Gracias por tu confianza';$('rtxt').textContent='Omitiste varias preguntas, así que no calculamos un resultado. Está bien: puedes repetirlo cuando quieras. '+(isGuest?'Como invitado, nada se guarda.':'Tus respuestas se guardaron cifradas.');$('rtips').innerHTML='<li>Responde al menos 6 de las 10 preguntas si quieres ver una guía.</li>'}
+    else{const b=calmaBand(pct);$('rico').textContent=b.ico;$('rtit').textContent=b.t;$('rtxt').textContent=b.d+' (Carga: '+pct+'/100)';$('rbar').style.width='0';setTimeout(()=>$('rbar').style.width=pct+'%',60);$('rtips').innerHTML=b.tips.map(t=>'<li>'+t+'</li>').join('')}
+    $('rnote').innerHTML='Este resultado es orientativo y <b>no es un diagnóstico</b>. Emergencias: <b>123</b> · Bogotá: Línea <b>106</b>.';show('v-result');
+  }
+  else{
+    m.style.display='none';$('rico').textContent='💛';$('rtit').textContent='Gracias por tu confianza';
+    $('rtxt').textContent='Compartir cómo te sientes requiere valentía. '+(isGuest?'Como invitado, tus respuestas no se guardan: se borrarán al salir.':'Tus respuestas se guardaron cifradas y con el máximo cuidado.');
+    $('rtips').innerHTML=['Si algo de lo que respondiste te pesa, comentarlo con alguien de confianza puede aliviar.','Considera hablar con un profesional de salud o de salud mental.','Recuerda que no estás solo/a.'].map(t=>'<li>'+t+'</li>').join('');
+    $('rnote').innerHTML='Este resultado es orientativo y <b>no es un diagnóstico</b>. Emergencias: <b>123</b> · Bogotá: Línea <b>106</b>.';show('v-result');
+  }
+  try{await api('/api/results','POST',{kind:'quiz',quizId:QUIZ.id,answers:answers.slice()})}catch(e){alert('No se pudo guardar tu respuesta: '+e.message)}
+}
+
+/* Informe orientativo */
+async function openReport(){
+  if(role!=='user')return;
+  try{
+    const r=await api('/api/my/report');
+    $('rep').innerHTML=`<h1>Informe de orientación</h1><p class="sub">${esc(r.fecha)} · Participante: ${esc(r.alias)}</p>
+    <div class="rlv" style="border-color:${esc(r.color)}"><small>Necesidad orientativa de consultar a un psicólogo</small><b style="color:${esc(r.color)}">${esc(r.nivel)}</b></div>
+    <div class="meter"><i style="width:${+r.score}%"></i></div><p>Bienestar (WHO-5): <b>${+r.score}/100</b>${r.prev!=null?' · resultado anterior: '+(+r.prev):''}</p>
+    <h2>${esc(r.titulo)}</h2><p>${esc(r.texto)}</p><h2>Qué puedes hacer</h2><ul class="tips">${r.pasos.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><div class="note">${esc(r.aviso)}</div>${isGuest?'<p class="foot" style="text-align:left"><b>Modo invitado:</b> este informe se borrará cuando salgas. Si quieres conservarlo, usa el botón de imprimir / guardar PDF ahora.</p>':''}`;
+    show('v-report');
+  }catch(e){alert(e.message)}
+}
+
+/* Juegos: visibilidad según el administrador + guardado de resultados */
+const _oa=openArcade;
+openArcade=async function(){
+  if(!consent)return;const g=await gamesCfg();
+  document.querySelectorAll('#a-hub .gc').forEach((b,i)=>b.style.display=g[i+1]?'':'none');
+  $('nogames').style.display=Object.values(g).some(Boolean)?'none':'block';_oa();
+};
+const _sm=summary;
+summary=function(){_sm();clearTimeout(pt);pt=setTimeout(()=>{
+  if(role==='user'&&(S.neg.length||S.neu.length||S.effort||S.plant!==null))api('/api/results','POST',{kind:'games',neg:S.neg,neu:S.neu,effort:S.effort,done:S.done,tasks:S.tasks,plant:S.plant}).catch(()=>{});
+},800)};
+
+/* ===== Chat de ejemplo (temporal) =====
+   Todo ocurre en el navegador: respuestas predefinidas que se personalizan con lo que ya hiciste (WHO-5, cuestionario de 10,
+   juegos). Con cuenta, también recupera tus resultados guardados. Sin resultados funciona como un chat sin datos. */
+let H={},chatHydrated=false,chatBusy=false,chatMood=null;
+async function hydrateChat(){
+  if(chatHydrated||role!=='user')return;chatHydrated=true;
+  try{
+    const d=await api('/api/my/data'),r=(d.resultados||[]).slice().sort((x,y)=>String(y.fecha).localeCompare(String(x.fecha)));
+    const w=r.find(x=>x.tipo==='quiz'&&x.cuestionario==='who5'&&x.puntaje!=null);if(w)H.wb=w.puntaje;
+    const c=r.find(x=>x.tipo==='quiz'&&x.cuestionario==='calma10');if(c)H.calma=calmaPct(c.answers);
+    const g=r.find(x=>x.tipo==='games');if(g){H.neg=g.neg||[];H.neu=g.neu||[];H.effort=g.effort;H.done=g.done;H.plant=g.plant!=null?g.plant:null}
+  }catch(e){}
+}
+function ctx(){
+  const neg=S.neg.length?S.neg:(H.neg||[]),neu=S.neu.length?S.neu:(H.neu||[]);
+  const c={wb:S.wb!=null?S.wb:(H.wb??null),calma:S.calma!=null?S.calma:(H.calma??null),mn:avg(neg.filter(x=>x!=null)),mu:avg(neu.filter(x=>x!=null)),
+    effort:S.effort||H.effort||null,done:S.effort?S.done:!!H.done,plant:S.plant!==null?S.plant:(H.plant??null)};
+  c.has=c.wb!=null||c.calma!=null||c.mn!=null||c.mu!=null||!!c.effort||c.plant!=null;return c;
+}
+function chatModeBtn(){
+  const c=ctx(),b=$('cmode');b.classList.toggle('nodata',!c.has);
+  b.textContent=c.has?'Usando tus resultados':'Sin datos tuyos';
+}
+const MENU=[['resumen','📋','Mi resumen'],['animo','🙂','Cómo me siento hoy'],['estres','🌬️','Manejar el estrés'],['respirar','🫧','Respirar juntos'],['sueno','🌙','Dormir mejor'],['juegos','🎮','Hablar de mis juegos'],['reto','🌱','Un pequeño reto'],['datos','🔒','¿Qué datos usas?'],['ayuda','🆘','Necesito ayuda ahora']];
+function buildMenu(){$('cmenu').innerHTML=MENU.map(m=>'<button class="mt'+(m[0]==='ayuda'?' alert':'')+'" onclick="chatTopic(\''+m[0]+'\',true)"><span>'+m[1]+'</span>'+m[2]+'</button>').join('')}
+function toggleMenu(f){const m=$('cmenu');m.hidden=f===undefined?!m.hidden:!f;$('cmbtn').setAttribute('aria-expanded',String(!m.hidden))}
+function addBub(html,who,raw){
+  const d=document.createElement('div');d.className='bub '+who;if(raw)d.textContent=html;else d.innerHTML=html;$('cbody').appendChild(d);$('cbody').scrollTop=$('cbody').scrollHeight;return d;
+}
+function botSay(html,delay){
+  return new Promise(res=>{
+    chatBusy=true;const t=document.createElement('div');t.className='bub bot typing';t.innerHTML='<i></i><i></i><i></i>';$('cbody').appendChild(t);$('cbody').scrollTop=$('cbody').scrollHeight;
+    setTimeout(()=>{t.remove();addBub(html,'bot');chatBusy=false;res()},matchMedia('(prefers-reduced-motion: reduce)').matches?0:(delay??550+Math.min(700,html.length*3)));
+  });
+}
+const qr=(arr)=>'<div class="qr">'+arr.map(a=>'<button class="qb" onclick="chatTopic(\''+a[0]+'\',true)">'+a[1]+'</button>').join('')+'</div>';
+const MORE=qr([['estres','Manejar el estrés'],['respirar','Respirar juntos'],['reto','Un pequeño reto']]);
+function chatReset(){chatHydrated=false;H={};chatMood=null;chatBusy=false;if($('cbody'))$('cbody').innerHTML=''}
+async function openChat(){
+  if(!consent)return;show('v-chat');await hydrateChat();chatModeBtn();buildMenu();
+  if(!$('cbody').children.length){
+    const c=ctx();toggleMenu(true);
+    await botSay('¡Hola! Soy <b>Calma</b> 🌿, un asistente de ejemplo para acompañarte un ratito.');
+    await botSay(c.has?'Ya vi que hiciste algunas actividades, así que puedo responderte con eso en mente. Elige un tema del menú o cuéntame cómo estás.':'Todavía no tengo resultados tuyos (cuestionarios o juegos), así que conversaremos sin datos. Si luego los haces, podré personalizar mis respuestas. Elige un tema del menú o escribe algo.');
+  } else {chatModeBtn()}
+  setTimeout(()=>$('cinp').focus({preventScroll:true}),100);
+}
+const CRISIS=/(suicid|quitarme la vida|quiero morir|matarme|no quiero vivir|hacerme da[ñn]o|acabar con todo|autolesi|cortarme)/i;
+function crisis(){
+  return '💛 Gracias por decírmelo; me importa cómo estás. Lo que sientes merece apoyo de una persona real <b>ahora</b>:<ul><li>Si estás en peligro inmediato, llama al <b>123</b>.</li><li>En Bogotá, la <b>Línea 106</b> atiende en crisis emocional.</li><li>Si puedes, busca a alguien de confianza y quédate acompañado/a.</li></ul>No tienes que pasar esto solo/a. ¿Hay alguien cerca con quien puedas estar ahora?';
+}
+function chatSend(){
+  const i=$('cinp'),t=i.value.trim();if(!t||chatBusy)return;i.value='';addBub(t,'me',true);toggleMenu(false);
+  chatFree(t);
+}
+async function chatFree(t){
+  const x=t.toLowerCase();
+  if(CRISIS.test(x))return botSay(crisis());
+  const m=[[/\b(hola|buenas|buenos d[ií]as|hey)\b/,'hola'],[/\b(gracias|genial|ok|vale|listo)\b/,'gracias'],[/(resumen|resultado|puntaje|c[oó]mo me fue)/,'resumen'],
+   [/(estr[eé]s|ansied|ansios|nervios|agobi|abruma|presi[oó]n|preocup)/,'estres'],[/(dormir|sue[ñn]o|insomni|descans|desvel)/,'sueno'],[/(respir|calmar|calma ya|p[aá]nico)/,'respirar'],
+   [/(juego|planta|estrella|energ[ií]a)/,'juegos'],[/(reto|consejo|h[aá]bito|qu[eé] hago|ayuda con|sugerenc)/,'reto'],[/(datos|privacidad|guardas|qui[eé]n ve)/,'datos'],
+   [/(ayuda|psic[oó]log|terapeut|profesional)/,'ayuda'],[/(triste|\bmal\b|deprim|\bsolo\b|\bsola\b|vac[ií]o|llor|cansad|desanim)/,'triste'],[/\b(bien|content[oa]|feliz|alegre|tranquil[oa])\b/,'bien']];
+  const f=m.find(r=>r[0].test(x));
+  chatTopic(f?f[1]:'otro');
+}
+async function chatTopic(id,fromMenu){
+  if(chatBusy)return;
+  if(fromMenu){const mt=MENU.find(m=>m[0]===id);if(mt)addBub(mt[2],'me',true);toggleMenu(false)}
+  await hydrateChat();chatModeBtn();const c=ctx();
+  const wbTxt=c.wb==null?null:c.wb>=68?'un bienestar bueno':c.wb>=50?'un bienestar moderado':c.wb>=28?'semanas algo pesadas':'semanas bastante difíciles';
+  switch(id){
+  case 'hola': return botSay('¡Hola! 🌿 Me alegra que estés aquí. ¿Cómo te sientes hoy?'+qr([['animo','Contarte cómo estoy'],['resumen','Ver mi resumen'],['estres','Estoy estresado/a']]));
+  case 'gracias': return botSay('Con gusto 💚 Aquí sigo si quieres seguir conversando.'+MORE);
+  case 'resumen':{
+    if(!c.has)return botSay('Aún no tengo resultados tuyos para resumir. Puedes responder un <b>cuestionario</b> o probar los <b>juegos</b> y luego volver aquí. Mientras tanto, cuéntame cómo te sientes hoy.'+qr([['animo','Contarte cómo estoy'],['respirar','Respirar juntos']]));
+    const l=[];
+    if(c.wb!=null)l.push('<b>Bienestar (WHO-5):</b> '+c.wb+'/100, que sugiere '+wbTxt+'.');
+    if(c.calma!=null)l.push('<b>Calma y carga diaria:</b> '+c.calma+'/100 de carga ('+(c.calma>=60?'alta':c.calma>=33?'moderada':'baja')+').');
+    if(c.mn!=null||c.mu!=null)l.push('<b>Reflejos:</b> '+(c.mn??'–')+' ms tras palabras negativas y '+(c.mu??'–')+' ms tras neutras (solo un juego, sin valor diagnóstico).');
+    if(c.effort)l.push('<b>Energía:</b> elegiste la meta '+(c.effort==='facil'?'tranquila':'retadora')+(c.done?' y la completaste.':'.'));
+    if(c.plant!=null)l.push('<b>Mi planta:</b> '+plantEnd(c.plant).t+' ('+c.plant+'/8).');
+    let cierre='';
+    if(c.wb!=null&&c.calma!=null&&c.wb<50&&c.calma>=60)cierre='Tus dos cuestionarios apuntan en la misma dirección: estas semanas han sido pesadas. Vale la pena cuidarte y, si puedes, hablarlo con un profesional.';
+    else if(c.wb!=null&&c.wb>=68&&(c.calma==null||c.calma<33))cierre='Se ve un buen momento. Aprovecha para fijar las rutinas que te hacen bien.';
+    else if(c.wb!=null||c.calma!=null)cierre='Recuerda que son fotos de un momento, no una etiqueta sobre ti.';
+    return botSay('Esto es lo que veo hasta ahora:<ul>'+l.map(x=>'<li>'+x+'</li>').join('')+'</ul>'+cierre+qr([['estres','Qué hago con esto'],['reto','Un pequeño reto'],['ayuda','Hablar con un profesional']]));
+  }
+  case 'animo': return botSay('¿Cómo describirías tu día de hoy?'+'<div class="qr">'+[['5','😄 Muy bien'],['4','🙂 Bien'],['3','😐 Regular'],['2','😟 Mal'],['1','😞 Muy mal']].map(a=>'<button class="qb" onclick="chatMoodPick('+a[0]+',\''+a[1]+'\')">'+a[1]+'</button>').join('')+'</div>');
+  case 'estres':{
+    let t='Cuando el estrés aprieta, ayuda bajar el ritmo en pasos pequeños:<ul><li>Nombra lo que sientes: «estoy abrumado/a» ya lo hace más manejable.</li><li>Divide lo pendiente y elige solo <b>una</b> cosa para ahora.</li><li>Haz una pausa de respiración de 1 minuto.</li></ul>';
+    if(c.calma!=null)t=(c.calma>=60?'Vi que en el cuestionario de calma tu carga salió <b>alta</b> ('+c.calma+'/100), así que quiero ir con calma contigo. ':c.calma>=33?'Tu carga diaria salió <b>moderada</b> ('+c.calma+'/100): ya tienes algunos recursos y podemos reforzarlos. ':'Tu carga diaria salió <b>baja</b> ('+c.calma+'/100), eso es una buena base. ')+t;
+    else t='Aún no hiciste el cuestionario de calma y carga diaria; si lo haces, podré ajustar mis sugerencias. Por ahora, '+t.charAt(0).toLowerCase()+t.slice(1);
+    return botSay(t+qr([['respirar','Respirar juntos'],['sueno','Dormir mejor'],['ayuda','Hablar con un profesional']]),900);
+  }
+  case 'respirar': return botSay('Vamos con una respiración guiada. Sigue el círculo: <b>inhala</b> por la nariz mientras crece (4 s), <b>sostén</b> un instante y <b>exhala</b> despacio mientras se encoge (6 s). Repite 5 veces.<div class="breath" aria-label="Círculo de respiración">respira</div>Cuando termines, dime cómo te sientes.'+qr([['animo','Estoy mejor'],['estres','Sigo tenso/a']]));
+  case 'sueno':{
+    let t='Para dormir con más calma:<ul><li>Acuéstate y levántate a horas parecidas.</li><li>Evita pantallas y comidas pesadas la hora previa.</li><li>Si la mente no para, anota lo pendiente en un papel y déjalo para mañana.</li></ul>';
+    if(c.wb!=null&&c.wb<50)t='Tus respuestas sugieren cansancio acumulado, y dormir mal suele sumar. '+t+'Si el problema dura semanas, consúltalo con un profesional de la salud.';
+    return botSay(t+MORE,800);
+  }
+  case 'juegos':{
+    if(c.mn==null&&c.mu==null&&!c.effort&&c.plant==null)return botSay('Todavía no has jugado. En el <b>Rincón de Juegos</b> hay reflejos, energía y una planta que florece según cómo la cuides. Juega un poco y vuelve; con gusto lo comentamos.');
+    const l=[];
+    if(c.mn!=null&&c.mu!=null){const d=c.mn-c.mu;l.push('En <b>Atrapa la estrella</b> reaccionaste en '+c.mn+' ms tras palabras negativas y '+c.mu+' ms tras neutras'+(Math.abs(d)<40?': una diferencia pequeña, nada que destacar.':d>0?': algo más lento tras las negativas, algo muy común y que no significa nada por sí solo.':': algo más rápido tras las negativas; tampoco es una señal clínica.'));}
+    if(c.effort)l.push('En <b>Impulso de energía</b> elegiste la meta '+(c.effort==='facil'?'tranquila: escuchar tu energía del día es una buena decisión.':'retadora'+(c.done?' y la lograste. ¡Mucha determinación!':'. ¡Qué ganas!')));
+    if(c.plant!=null)l.push('En <b>Mi planta</b> lograste «'+plantEnd(c.plant).t.toLowerCase()+'». '+(c.plant>=8?'Leíste cada etapa con atención.':'Si quieres, vuelve a intentarlo leyendo qué necesita en cada etapa; el orden importa.'));
+    return botSay('Sobre tus juegos:<ul>'+l.map(x=>'<li>'+x+'</li>').join('')+'</ul><em style="font-size:12.5px">Los juegos no son pruebas ni diagnóstico.</em>'+MORE,900);
+  }
+  case 'reto':{
+    let r='Hoy prueba <b>un solo gesto pequeño</b>: toma un vaso de agua, camina 5 minutos o escribe una cosa por la que estés agradecido/a.';
+    if(c.plant!=null&&c.plant<8)r='Como en tu planta, <b>cada cosa buena tiene su momento</b>. Hoy elige una sola acción para lo que más necesitas ahora (descansar, moverte o hablar con alguien) y dale tiempo.';
+    if(c.calma!=null&&c.calma>=60)r='Hoy, <b>baja una exigencia</b>: elige algo de tu lista que puedas dejar para otro día y date 10 minutos sin pendientes.';
+    else if(c.wb!=null&&c.wb<50)r='Hoy, <b>escríbele o llama a alguien de confianza</b> solo para saludar. Conectar con otros suele ser un buen primer paso.';
+    return botSay(r+qr([['respirar','Respirar juntos'],['animo','Contarte cómo estoy']]));
+  }
+  case 'datos': return botSay('Soy una demo y funciono <b>en tu navegador</b>: no envío esta conversación a ningún lado ni la guardo. Para personalizarme uso:<ul><li>Tu puntaje WHO-5'+(c.wb!=null?' ✔':' (aún sin datos)')+'</li><li>El cuestionario de calma y carga'+(c.calma!=null?' ✔':' (aún sin datos)')+'</li><li>Tus juegos'+((c.mn!=null||c.effort||c.plant!=null)?' ✔':' (aún sin datos)')+'</li></ul>'+(isGuest?'Como invitado, todo se borra al salir.':'Con tu cuenta recupero lo que ya guardaste; puedes borrarlo cuando quieras desde el inicio.')+' Si no hay resultados, converso sin datos tuyos.',700);
+  case 'ayuda': return botSay('Pedir ayuda es un acto de cuidado. Algunas opciones:<ul><li>Emergencias: <b>123</b>.</li><li>Bogotá: <b>Línea 106</b> (apoyo emocional).</li><li>Tu EPS o un psicólogo/a: pide una cita de salud mental.</li><li>Una persona de confianza que te acompañe.</li></ul>'+(c.wb!=null&&c.wb<50?'Por lo que veo en tus resultados, consultar a un profesional sería una buena idea. ':'')+'Esto es orientación general, no un diagnóstico.');
+  case 'triste': return botSay('Lamento que te sientas así 💛 Gracias por contármelo. Lo que sientes es válido y no tienes que cargarlo solo/a.'+(c.wb!=null&&c.wb<50?' Tus respuestas del cuestionario también mostraban semanas pesadas, y eso merece atención.':'')+' ¿Qué te gustaría ahora?'+qr([['respirar','Respirar juntos'],['reto','Un pequeño reto'],['ayuda','Hablar con un profesional']]),800);
+  case 'bien': return botSay('¡Qué bueno leerlo! 🌸 Aprovecha ese buen momento: ¿qué lo está haciendo posible? Anotarlo ayuda a recordarlo cuando haga falta.'+MORE);
+  default: return botSay('Te escucho. No siempre tengo una respuesta exacta porque soy un ejemplo con mensajes predefinidos, pero puedo acompañarte con alguno de estos temas:'+qr([['animo','Cómo me siento hoy'],['estres','Manejar el estrés'],['resumen','Mi resumen'],['ayuda','Necesito ayuda ahora']]));
+  }
+}
+async function chatMoodPick(v,label){
+  if(chatBusy)return;addBub(label,'me',true);chatMood=v;const c=ctx();
+  if(v>=4)return botSay('Me alegra 🌸 '+(c.wb!=null&&c.wb<50?'Y es bonito contrastar con tus resultados recientes: hoy puede ser un día mejor. ':'')+'¿Qué te ayudó a sentirte así?'+MORE);
+  if(v===3)return botSay('Un día «regular» también es válido. A veces ayuda una pausa corta o moverse un poco.'+qr([['respirar','Respirar juntos'],['reto','Un pequeño reto']]));
+  return botSay('Siento que hoy esté pesado 💛 '+(c.wb!=null&&c.wb<50?'Va en línea con lo que mostraron tus respuestas, y mereces cuidado. ':'')+'No tienes que arreglarlo todo hoy. Empecemos con algo pequeño:'+qr([['respirar','Respirar juntos'],['estres','Manejar el estrés'],['ayuda','Hablar con un profesional']]),800);
+}
+/* Administración */
+function adminTab(t){
+  if(role!=='admin')return;const ks=['g','q','p','s'];
+  ks.forEach(x=>$('ad-'+x).style.display=x===t?'block':'none');
+  document.querySelectorAll('.tb').forEach((b,i)=>b.classList.toggle('on',ks[i]===t));
+  ({g:rG,q:rQ,p:rP,s:rS})[t]();
+}
+async function rG(){
+  const g=await gamesCfg();
+  $('ad-g').innerHTML='<p class="sub" style="text-align:left">Elige qué juegos ven los participantes.</p>'+GAMES.map(x=>`<div class="item"><div><b>${x.n}</b><small><span class="badge ${g[x.id]?'':'off'}">${g[x.id]?'Disponible':'Oculto'}</span></small></div><button class="btn sm ${g[x.id]?'danger':''}" onclick="togGame(${x.id})">${g[x.id]?'Quitar':'Agregar'}</button></div>`).join('');
+}
+async function togGame(id){const g=await gamesCfg();g[id]=!g[id];await api('/api/admin/games','PUT',g);rG()}
+async function rQ(){
+  const qs=(await loadCfg()).quizzes;
+  $('ad-q').innerHTML='<div class="row" style="justify-content:flex-start;margin:0 0 12px"><button class="btn sm" onclick="newQ(10)">+ Cuestionario de 10</button><button class="btn sm" onclick="newQ(15)">+ Cuestionario de 15</button><button class="btn sm soft" onclick="newQ(+prompt(\'¿Cuántas preguntas? (5 a 30)\',\'12\')||0)">+ Otro tamaño</button></div>'+
+  qs.map(q=>`<div class="item"><div><b>${esc(q.title)}</b><small>${q.items.length} preguntas · <span class="badge ${q.published?'':'off'}">${q.published?'Publicado':'Oculto'}</span></small></div><div><button class="btn sm soft" onclick="togQ('${q.id}')">${q.published?'Ocultar':'Publicar'}</button> ${q.builtin?'':`<button class="btn sm danger" onclick="delQ('${q.id}')">Borrar</button>`}</div></div>`).join('');
+}
+async function togQ(id){const q=CFG.quizzes.find(x=>x.id===id);await api('/api/admin/quizzes','PUT',{...q,published:!q.published});rQ()}
+async function delQ(id){if(confirm('¿Borrar este cuestionario?')){await api('/api/admin/quizzes/'+id,'DELETE');rQ()}}
+function newQ(n){n=Math.round(n);if(!(n>=5&&n<=30))return;ed={id:'c'+Date.now(),title:'',intro:'Piensa en cómo te has sentido recientemente…',n};editQ()}
+function editQ(){
+  $('ad-q').innerHTML='<div class="care">Este cuestionario recogerá datos sensibles. Al participante se le recordará que se tratan con el máximo cuidado, podrá omitir preguntas y verá las líneas de ayuda. Evita preguntas que identifiquen a la persona y pide revisión de un profesional de la salud mental.</div>'+
+  `<input class="inp" id="e-t" placeholder="Título del cuestionario" value="${esc(ed.title)}"><input class="inp" id="e-i" placeholder="Frase introductoria" value="${esc(ed.intro)}">`+
+  Array.from({length:ed.n},(_,i)=>`<input class="inp e-q" placeholder="Pregunta ${i+1} de ${ed.n}">`).join('')+
+  '<div class="row"><button class="btn soft" onclick="rQ()">Cancelar</button><button class="btn" onclick="saveQ()">Guardar y publicar</button></div><p class="err" id="e-m"></p>';
+}
+async function saveQ(){
+  const t=$('e-t').value.trim(),it=[...document.querySelectorAll('.e-q')].map(i=>i.value.trim());
+  if(!t||it.some(x=>!x)){$('e-m').textContent='Completa el título y todas las preguntas.';return}
+  try{await api('/api/admin/quizzes','PUT',{id:ed.id,title:t,intro:$('e-i').value.trim()||ed.intro,items:it,published:true});ed=null;rQ()}catch(e){$('e-m').textContent=e.message}
+}
+async function rP(){
+  const s=await api('/api/admin/stats');
+  $('ad-p').innerHTML=`<div class="stats"><div class="stat"><b>${s.participants}</b>Participantes</div><div class="stat"><b>${s.quizzes}</b>Cuestionarios</div><div class="stat"><b>${s.avg??'–'}</b>Bienestar medio</div></div>
+  <p class="foot" style="text-align:left;margin:0 0 10px">Necesidad orientativa de consulta psicológica (último WHO-5 por persona): ${Object.entries(s.levels).map(([k,v])=>k+': <b>'+v+'</b>').join(' · ')}.<br>Resultados individuales: solo de quienes lo autorizaron al crear su cuenta (${s.users.filter(u=>u.share).length} de ${s.users.length}). Invitados conectados ahora: <b>${s.guests}</b> (no se guardan ni se pueden ver).</p>`+
+  (s.users.map(u=>`<div class="item"><div><b>${esc(u.alias)}</b><small>Desde ${esc(u.created.slice(0,10))} · ${u.n} registros · <span class="badge ${u.share?'':'off'}">${u.share?'Comparte resultados':'No comparte'}</span></small></div><div>${u.share?`<button class="btn sm soft" onclick="admView(${+u.id})">Ver resultados</button> `:''}<button class="btn sm danger" onclick="admDel(${+u.id})">Borrar datos</button></div></div>`).join('')||'<p class="sub">Aún no hay participantes.</p>');
+}
+async function admView(id){
+  let d;try{d=await api('/api/admin/participants/'+id+'/results')}catch(e){alert(e.message);rP();return}
+  const f=t=>esc((t||'').replace('T',' ').slice(0,16)),m=a=>{const v=(a||[]).filter(x=>x!=null);return v.length?Math.round(v.reduce((x,y)=>x+y,0)/v.length):null};
+  const quizzes=d.resultados.filter(r=>r.tipo==='cuestionario'),games=d.resultados.filter(r=>r.tipo==='juegos');
+  $('ad-p').innerHTML=`<button class="back" onclick="rP()">← Participantes</button><h2>${esc(d.alias)}</h2>
+  <p class="foot" style="text-align:left;margin:0 0 10px">Cuenta creada ${esc(d.created.slice(0,10))} · autorización de consulta desde ${esc((d.autorizacion_desde||'').slice(0,10))}. Esta consulta quedó registrada y la persona puede verla.</p>`+
+  (quizzes.map(r=>`<div class="res"><h3>${esc(r.titulo||r.cuestionario)}</h3><small>${f(r.fecha)}${r.puntaje!=null?` · Puntaje WHO-5: <b>${+r.puntaje}/100</b> · Nivel orientativo: <b>${esc(r.nivel)}</b>`:' · Sin puntaje (cuestionario propio u omitidas)'}</small>
+    <div class="tt-w"><table class="tt"><tr><th>#</th><th>Pregunta</th><th>Respuesta</th><th>Valor</th></tr>${r.respuestas.map(x=>`<tr><td>${+x.n}</td><td>${esc(x.pregunta||'—')}</td><td>${x.texto==null?'<i>Omitida</i>':esc(x.texto)}</td><td class="n">${x.valor==null?'—':+x.valor}</td></tr>`).join('')}</table></div></div>`).join('')||'<p class="sub">Sin cuestionarios respondidos.</p>')+
+  (games.map(r=>{const mn=m(r.neg),mu=m(r.neu);return`<div class="res"><h3>Juegos</h3><small>${f(r.fecha)}</small>
+    <div class="tt-w"><table class="tt"><tr><th>Medida</th><th>Valor</th></tr>
+    <tr><td>Reacción ante palabras negativas (ms)</td><td class="n">${(r.neg||[]).filter(x=>x!=null).join(' · ')||'—'}</td></tr><tr><td>Media negativas</td><td class="n">${mn??'—'}</td></tr>
+    <tr><td>Reacción ante palabras neutras (ms)</td><td class="n">${(r.neu||[]).filter(x=>x!=null).join(' · ')||'—'}</td></tr><tr><td>Media neutras</td><td class="n">${mu??'—'}</td></tr>
+    <tr><td>Diferencia (negativas − neutras)</td><td class="n">${mn!=null&&mu!=null?(mn-mu>0?'+':'')+(mn-mu)+' ms':'—'}</td></tr>
+    <tr><td>Meta elegida (Impulso de energía)</td><td class="n">${r.meta==='facil'?'Tranquila':r.meta==='dificil'?'Retadora':'—'}</td></tr><tr><td>Meta completada</td><td class="n">${r.completada?'Sí':'No'}</td></tr><tr><td>Mi planta (puntos de crecimiento)</td><td class="n">${r.planta!=null?(+r.planta)+' de 8':'—'}</td></tr></table></div></div>`}).join(''))+
+  `<p class="foot" style="text-align:left">Los juegos no se usan para el informe ni son una prueba diagnóstica. Interpretación a cargo de un profesional de la salud mental.</p><details class="raw"><summary>Ver datos en bruto (JSON)</summary><pre>${esc(JSON.stringify(d,null,2))}</pre></details>`;
+}
+async function admDel(id){if(confirm('¿Borrar la cuenta y todos los datos de este participante?')){await api('/api/admin/participants/'+id,'DELETE');rP()}}
+async function rS(){
+  const b=await api('/api/admin/backups');
+  $('ad-s').innerHTML='<button class="btn sm" onclick="mkBackup()">Crear copia de seguridad ahora</button><p class="foot" style="text-align:left">Copias automáticas cada 24 h (se conservan las 14 últimas). Los datos sensibles van cifrados: guarda aparte la clave (data/secret.key), sin ella las copias no se pueden leer.</p>'+
+  (b.list.map(x=>`<div class="item"><div><b>${esc(x.name)}</b><small>${+x.kb} KB</small></div></div>`).join('')||'<p class="sub">Sin copias.</p>')+
+  '<h2 style="font-size:16px;margin-top:16px">Cambiar contraseña</h2><input class="inp" type="password" id="pw0" placeholder="Contraseña actual"><input class="inp" type="password" id="pw1" placeholder="Nueva contraseña (mínimo 10)"><button class="btn sm" onclick="chPw()">Actualizar</button><p class="err" id="smsg"></p>';
+}
+async function mkBackup(){try{await api('/api/admin/backup','POST',{});rS()}catch(e){alert(e.message)}}
+async function chPw(){try{await api('/api/admin/password','POST',{old:$('pw0').value,new:$('pw1').value});$('smsg').style.color='var(--pri)';$('smsg').textContent='Contraseña actualizada.';$('pw0').value=$('pw1').value=''}catch(e){$('smsg').style.color='';$('smsg').textContent=e.message}}
+
+/* ===== Fondo de partículas (de Plataforma) =====
+   Luces verdes suaves + círculos que suben y pulsan. Mejoras: tope de partículas, se pausa con la pestaña oculta,
+   y con "reducir movimiento" del sistema se dibuja una sola imagen fija. */
+(function(){
+  const cv=document.getElementById('bgCanvas');if(!cv||!cv.getContext)return;
+  const ctx=cv.getContext('2d'),still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W,H,parts=[],lights=[],raf=0;
+  const PAL={green:{c:['59, 99, 71','74, 124, 89','104, 144, 120','42, 110, 89'],l:['rgba(168,207,185,.45)','rgba(180,218,196,.5)','rgba(195,225,210,.4)']},
+    warm:{c:['196, 160, 48','214, 182, 82','170, 150, 70','132, 158, 96'],l:['rgba(250,236,170,.5)','rgba(244,232,160,.45)','rgba(226,238,196,.4)']}};
+  let theme='green';
+  class Light{
+    constructor(x,y,r,i){this.x=x;this.y=y;this.r=r;this.i=i;this.a=Math.random()*6.283;this.v=.004+Math.random()*.004}
+    draw(){this.a+=this.v;const x=W*this.x+Math.sin(this.a)*50,y=H*this.y+Math.cos(this.a)*40,g=ctx.createRadialGradient(x,y,0,x,y,this.r);
+      g.addColorStop(0,PAL[theme].l[this.i]);g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,this.r,0,6.283);ctx.fill()}
+  }
+  class P{
+    constructor(){this.reset(true)}
+    reset(first){this.x=Math.random()*W;this.y=first?Math.random()*H:H+20;this.r=Math.random()*12+3;this.ring=Math.random()>.55;
+      this.vx=(Math.random()-.5)*.4;this.vy=-Math.random()*.6-.15;this.al=Math.random()*.35+.2;this.ps=Math.random()*.02+.008;this.p=Math.random()*Math.PI;
+      this.k=Math.floor(Math.random()*4);this.c=PAL[theme].c[this.k]}
+    step(){this.x+=this.vx;this.y+=this.vy;this.p+=this.ps;if(this.y<-20||this.x<-20||this.x>W+20)this.reset(false)}
+    draw(){const a=(Math.sin(this.p)*.35+.65)*this.al;
+      if(this.ring){ctx.strokeStyle='rgba('+this.c+','+a+')';ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,6.283);ctx.stroke()}
+      else{const g=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r);g.addColorStop(0,'rgba('+this.c+','+a+')');
+        g.addColorStop(.7,'rgba('+this.c+','+a*.5+')');g.addColorStop(1,'rgba('+this.c+',0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(this.x,this.y,this.r*1.5,0,6.283);ctx.fill()}}
+  }
+  function init(){
+    W=cv.width=innerWidth;H=cv.height=innerHeight;
+    lights=[new Light(.2,.3,350,0),new Light(.8,.7,400,1),new Light(.5,.5,300,2)];
+    parts=[];const n=Math.min(160,Math.floor(W*H/7500));for(let i=0;i<n;i++)parts.push(new P());
+    if(still)frame()
+  }
+  function frame(){ctx.clearRect(0,0,W,H);lights.forEach(l=>l.draw());parts.forEach(p=>{p.step();p.draw()});if(!still)raf=requestAnimationFrame(frame)}
+  let t;addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(()=>{cancelAnimationFrame(raf);init();if(!still)frame()},150)});
+  document.addEventListener('visibilitychange',()=>{if(still)return;if(document.hidden)cancelAnimationFrame(raf);else{cancelAnimationFrame(raf);frame()}});
+  window.bgTheme=n=>{if(!PAL[n]||n===theme)return;theme=n;parts.forEach(q=>q.c=PAL[n].c[q.k]);if(still)frame()};
+  init();if(!still)frame();
+})();
+</script>
+</body>
+</html>

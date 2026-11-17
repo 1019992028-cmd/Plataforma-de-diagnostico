@@ -1,0 +1,14 @@
+{
+  "name": "mente-en-calma",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma de bienestar con servidor Node + SQLite",
+  "engines": {
+    "node": ">=22.13.0 <25"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "admin": "node admin.js",
+    "check": "node admin.js check"
+  }
+}

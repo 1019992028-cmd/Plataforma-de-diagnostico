@@ -1,0 +1,23 @@
+# Blueprint de Render. Requiere un plan de PAGO: el disco persistente no existe en el plan gratuito.
+services:
+  - type: web
+    name: mente-en-calma
+    runtime: node
+    plan: starter            # mínimo de pago; permite disco y Shell
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    autoDeploy: true
+    disk:
+      name: datos
+      mountPath: /var/data   # aquí vivirán mente.db y las copias
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 22            # node:sqlite requiere >= 22.13
+      - key: DATA_DIR
+        value: /var/data
+      - key: ADMIN_PASSWORD  # la escribes tú en el panel de Render (mín. 10 caracteres)
+        sync: false
+      - key: DATA_KEY        # 64 caracteres hex; GUÁRDALA también fuera de Render
+        sync: false

@@ -1,0 +1,9 @@
+# NUNCA subir datos ni claves a Git
+data/
+backups/
+*.db
+*.db-wal
+*.db-shm
+secret.key
+.env
+node_modules/
